@@ -3,14 +3,19 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("skills", {
-      id: {
+    await queryInterface.createTable("userSettings", {
+      userId: {
         type: Sequelize.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
+        unique: true,
+        references: {
+          model: "users",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
       },
 
-      name: Sequelize.STRING(191),
+      data: Sequelize.JSON,
 
       createdAt: {
         type: Sequelize.DATE,
@@ -25,6 +30,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("skills");
+    await queryInterface.dropTable("userSettings");
   },
 };

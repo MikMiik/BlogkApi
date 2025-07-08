@@ -7,28 +7,26 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER.UNSIGNED,
+        type: Sequelize.INTEGER,
       },
-      firstName: Sequelize.STRING(191),
+      firstName: Sequelize.STRING(50),
 
-      lastName: Sequelize.STRING(191),
+      lastName: Sequelize.STRING(50),
 
-      email: { type: Sequelize.STRING(191), allowNull: false, unique: true },
+      email: { type: Sequelize.STRING(50), unique: true },
 
       password: {
-        type: Sequelize.STRING(191),
+        type: Sequelize.STRING(255),
         allowNull: false,
       },
 
       username: {
-        type: Sequelize.STRING(191),
-        allowNull: false,
+        type: Sequelize.STRING(100),
         unique: true,
       },
 
       phone: {
-        type: Sequelize.STRING(191),
-        allowNull: false,
+        type: Sequelize.STRING(50),
         unique: true,
       },
 
@@ -37,7 +35,20 @@ module.exports = {
         defaultValue: "User",
       },
 
-      status: Sequelize.STRING(191),
+      status: Sequelize.STRING(50),
+
+      twoFactorAuth: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
+
+      twoFactorSecret: Sequelize.STRING(50),
+
+      followersCount: { type: Sequelize.INTEGER, defaultValue: 0 },
+
+      followingCount: { type: Sequelize.INTEGER, defaultValue: 0 },
+
+      likesCount: { type: Sequelize.INTEGER, defaultValue: 0 },
 
       lastLogin: Sequelize.DATE,
 
