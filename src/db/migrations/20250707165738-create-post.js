@@ -1,28 +1,62 @@
-'use strict';
+"use strict";
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Posts', {
+    await queryInterface.createTable("posts", {
       id: {
-        allowNull: false,
+        type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
       },
-      firstName: {
-        type: Sequelize.STRING
+      userId: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: "users",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
       },
-      createdAt: {
+      topic: Sequelize.STRING(255),
+      title: Sequelize.STRING(191),
+      description: Sequelize.TEXT,
+      slug: {
+        type: Sequelize.STRING(191),
         allowNull: false,
-        type: Sequelize.DATE
+        unique: true,
+      },
+      content: Sequelize.TEXT,
+      readTime: Sequelize.INTEGER,
+      thumbnail: Sequelize.STRING(255),
+      status: {
+        type: Sequelize.STRING(50),
+        defaultValue: "Draft",
+      },
+      metaTitle: Sequelize.STRING(191),
+      metaDescription: Sequelize.TEXT,
+      visibility: {
+        type: Sequelize.STRING(50),
+        defaultValue: "Public",
+      },
+      visibilityIcon: Sequelize.STRING(255),
+      allowComments: Sequelize.BOOLEAN,
+      viewsCount: Sequelize.INTEGER,
+      likesCount: Sequelize.INTEGER,
+      publishedAt: Sequelize.DATE,
+      draftedAt: Sequelize.DATE,
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
       },
       updatedAt: {
+        type: Sequelize.DATE,
         allowNull: false,
-        type: Sequelize.DATE
-      }
+      },
     });
   },
+
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Posts');
-  }
+    await queryInterface.dropTable("posts");
+  },
 };

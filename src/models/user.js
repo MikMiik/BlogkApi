@@ -1,5 +1,6 @@
 "use strict";
 const { Model } = require("sequelize");
+const { default: slugify } = require("slugify");
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
@@ -19,9 +20,9 @@ module.exports = (sequelize, DataTypes) => {
 
       lastName: DataTypes.STRING(191),
 
-      username: { type: DataTypes.STRING(191), allowNull: false, unique: true },
+      username: { type: DataTypes.STRING(191), unique: true },
 
-      phone: { type: DataTypes.STRING(191), allowNull: false, unique: true },
+      phone: { type: DataTypes.STRING(191), unique: true },
 
       role: { type: DataTypes.STRING(191), defaultValue: "User" },
 
@@ -40,6 +41,16 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "User",
       tableName: "users",
       timestamps: true,
+      hooks: {
+        beforeCreate: (user, options) => {
+          if (user.firstName) {
+            user.username = slugify(user.firstName + " " + user.lastName, {
+              lower: true,
+              strict: true,
+            });
+          }
+        },
+      },
     }
   );
   return User;

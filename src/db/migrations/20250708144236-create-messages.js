@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("comments", {
+    await queryInterface.createTable("messages", {
       id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -18,27 +18,20 @@ module.exports = {
         onDelete: "CASCADE",
         onUpdate: "CASCADE",
       },
-      postId: {
+      conversationId: {
         type: Sequelize.INTEGER,
         references: {
-          model: "posts",
+          model: "conversations",
           key: "id",
         },
         onDelete: "CASCADE",
         onUpdate: "CASCADE",
+      },
+      type: {
+        type: Sequelize.STRING(50),
+        defaultValue: "text",
       },
       content: Sequelize.TEXT,
-      parentId: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: "comments",
-          key: "id",
-        },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
-      },
-      commentableId: Sequelize.INTEGER,
-      commentableType: Sequelize.STRING,
       deletedAt: Sequelize.DATE,
       createdAt: {
         type: Sequelize.DATE,
@@ -52,6 +45,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("comments");
+    await queryInterface.dropTable("messages");
   },
 };

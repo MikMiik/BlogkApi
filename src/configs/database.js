@@ -15,29 +15,29 @@ module.exports = {
     },
     timezone: "+07:00",
   },
-  // test: {
-  //   username: process.env.DB_USER,
-  //   password: process.env.DB_PASS,
-  //   database: process.env.DB_NAME,
-  //   host: "127.0.0.1",
-  //   port: 3306,
-  //   dialect: "mysql",
-  //   dialectOptions: {
-  //     bigNumberStrings: true,
-  //   },
-  // },
-  // production: {
-  //   username: process.env.DB_USER,
-  //   password: process.env.DB_PASS,
-  //   database: process.env.DB_NAME,
-  //   host: process.env.DB_HOST,
-  //   port: process.env.DB_PORT,
-  //   dialect: "mysql",
-  //   dialectOptions: {
-  //     bigNumberStrings: true,
-  //     ssl: {
-  //       ca: fs.readFileSync(__dirname + "/mysql-ca-main.crt"),
-  //     },
-  //   },
-  // },
+  test: {
+    username: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    host: "127.0.0.1",
+    port: 3306,
+    dialect: "mysql",
+    dialectOptions: {
+      bigNumberStrings: true,
+    },
+  },
+  production: {
+    username: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    dialect: "mysql",
+    dialectOptions: {
+      bigNumberStrings: true,
+      // ssl: {
+      //   ca: fs.readFileSync(__dirname + "/mysql-ca-main.crt"),
+      // },
+    },
+  },
 };

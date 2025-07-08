@@ -7,11 +7,15 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER.UNSIGNED,
+        type: Sequelize.INTEGER,
       },
       userId: {
-        type: Sequelize.INTEGER.UNSIGNED,
+        type: Sequelize.INTEGER,
         unique: true,
+        references: {
+          model: "users",
+          key: "id",
+        },
       },
       avatar: {
         type: Sequelize.STRING(191),

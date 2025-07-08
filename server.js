@@ -24,7 +24,12 @@ const responseEnhancer = require("@/middlewares/responseEnhancer");
 /*------------------------------------------------------------ */
 
 // Middleware
-app.use(cors({ origin: "http://blogk.online/", credentials: true }));
+app.use(
+  cors({
+    origin: ["http://blogk.online", "http://localhost:5173"],
+    credentials: true,
+  })
+);
 app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded());
