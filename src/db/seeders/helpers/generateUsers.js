@@ -60,10 +60,24 @@ async function generateUsers(count = 100) {
       username,
       status: faker.helpers.arrayElement(["Active", "Offline"]),
       phone,
+      birthday: faker.date.birthdate({ min: 18, max: 80, mode: "age" }),
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
+      // gender: faker.helpers.arrayElement(["Male", "Female", "Other"]),
+      address: faker.location.streetAddress(true),
+      introduction: faker.lorem.sentence(),
       lastLogin: faker.date.between({
         from: "2022-01-01T00:00:00.000Z",
         to: "2025-06-14T00:00:00.000Z",
       }),
+      twoFactorAuth: faker.datatype.boolean(0.5),
+      twoFactorSecret: generator.generate({
+        length: 10,
+        numbers: true,
+      }),
+      postsCount: faker.number.int({ min: 0, max: 10 }),
+      followersCount: faker.number.int({ min: 0, max: 10 }),
+      followingCount: faker.number.int({ min: 0, max: 10 }),
+      likesCount: faker.number.int({ min: 0, max: 10 }),
       verifiedAt: faker.datatype.boolean(0.8) ? faker.date.recent() : null, // 80% chance được verify
       createdAt: faker.date.between({
         from: "2022-01-01T00:00:00.000Z",
