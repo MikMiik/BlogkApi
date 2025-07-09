@@ -19,7 +19,7 @@ module.exports = {
         onUpdate: "CASCADE",
       },
       url: Sequelize.STRING(255),
-      altText: Sequelize.STRING(191),
+      altText: Sequelize.STRING(255),
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,

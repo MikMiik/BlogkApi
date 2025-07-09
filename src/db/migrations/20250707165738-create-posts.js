@@ -18,12 +18,11 @@ module.exports = {
         onDelete: "CASCADE",
         onUpdate: "CASCADE",
       },
-      topic: Sequelize.STRING(255),
-      title: Sequelize.STRING(191),
+      topic: Sequelize.STRING(100),
+      title: Sequelize.STRING(255),
       description: Sequelize.TEXT,
       slug: {
         type: Sequelize.STRING(191),
-        allowNull: false,
         unique: true,
       },
       content: Sequelize.TEXT,
@@ -33,7 +32,7 @@ module.exports = {
         type: Sequelize.STRING(50),
         defaultValue: "Draft",
       },
-      metaTitle: Sequelize.STRING(191),
+      metaTitle: Sequelize.STRING(255),
       metaDescription: Sequelize.TEXT,
       visibility: {
         type: Sequelize.STRING(50),
