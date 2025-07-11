@@ -42,12 +42,37 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "users",
       timestamps: true,
       hooks: {
-        beforeCreate: (user, options) => {
-          if (user.firstName) {
-            user.username = slugify(user.firstName + " " + user.lastName, {
-              lower: true,
-              strict: true,
+        beforeCreate: async (user, options) => {
+          if (user.firstName || user.lastName) {
+            const baseSlug = slugify(
+              (user.firstName || "") + " " + (user.lastName || ""),
+              {
+                lower: true,
+                strict: true,
+              }
+            );
+
+            let slug = baseSlug;
+            let counter = 1;
+
+            // Tìm xem username đã tồn tại chưa
+            const existingUser = await User.findOne({
+              where: { username: slug },
             });
+
+            while (existingUser) {
+              slug = `${baseSlug}-${counter}`;
+              counter++;
+
+              // kiểm tra tiếp slug mới
+              const exists = await User.findOne({
+                where: { username: slug },
+              });
+
+              if (!exists) break;
+            }
+
+            user.username = slug;
           }
         },
       },

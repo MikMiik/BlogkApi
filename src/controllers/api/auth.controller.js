@@ -1,19 +1,20 @@
 const usersService = require("@/services/user.service");
-const md5 = require("md5");
 const authService = require("@/services/auth.service");
+const { deleteRefreshToken } = require("@/services/refreshToken.service");
 // const transporter = require("@/configs/admin/mailer");
 // const { createToken, verifyToken } = require("@/utils/jwt");
 // const queue = require("@/utils/queue");
 
 exports.login = async (req, res) => {
-  const email = req.body.email;
-  const password = md5(req.body.password);
-  const user = await usersService.getByEmailAndPassword(email, password);
-
-  if (user) {
-    req.session.userId = user.id;
-    req.flash("success", "Login successful");
-    res.redirect("/admin");
+  try {
+    const tokenData = await authService.login(
+      req.body.email,
+      req.body.password,
+      req.body.rememberMe
+    );
+    res.success(200, tokenData);
+  } catch (error) {
+    res.error(401, error.message);
   }
 };
 
@@ -25,6 +26,31 @@ exports.register = async (req, res) => {
   } catch (error) {
     res.error(400, error.message);
   }
+};
+
+exports.me = async (req, res) => {
+  const accessToken = req.headers.authorization.replace("Bearer ", "");
+  const { userId } = await authService.checkUser(accessToken);
+  const user = await usersService.getById(userId);
+  res.success(200, user);
+};
+
+exports.refreshToken = async (req, res) => {
+  try {
+    const tokenData = await authService.refreshAccessToken(
+      req.body.refreshToken
+    );
+    res.success(200, tokenData);
+  } catch (error) {
+    res.error(403, error.message);
+  }
+};
+
+exports.logout = async (req, res) => {
+  const refreshToken = req.body.refreshToken;
+  if (!refreshToken) return res.error(400, "No token provided");
+  await deleteRefreshToken(refreshToken);
+  res.success(200, "Logged out successfully");
 };
 
 // exports.sendForgotEmail = async (req, res) => {
@@ -40,11 +66,6 @@ exports.register = async (req, res) => {
 //     `,
 //   };
 //   await transporter.sendMail(message);
-// };
-
-// exports.logout = async (req, res) => {
-//   delete req.session.userId;
-//   return res.redirect("/admin/login");
 // };
 
 // exports.verifyEmail = async (req, res) => {

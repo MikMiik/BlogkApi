@@ -18,7 +18,6 @@ module.exports = {
         onDelete: "CASCADE",
         onUpdate: "CASCADE",
       },
-      topic: Sequelize.STRING(100),
       title: Sequelize.STRING(255),
       description: Sequelize.TEXT,
       slug: {

@@ -2,7 +2,7 @@ const capitalize = require("./capitalize");
 const throw404 = require("./throw404");
 
 const services = {
-  // post: require("@/services/post.service"),
+  post: require("@/services/post.service"),
   user: require("@/services/user.service"),
   // comment: require("@/services/comment.service"),
 };

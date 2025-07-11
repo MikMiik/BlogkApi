@@ -6,14 +6,13 @@ const refreshTokenService = require("@/services/refreshToken.service");
 const register = async (data) => {
   const user = await User.create({
     ...data,
-    email: data.email,
     password: await hashPassword(data.password),
   });
 
   return jwtService.generateAccessToken({ userId: user.id });
 };
 
-const login = async (email, password) => {
+const login = async (email, password, rememberMe) => {
   const user = await User.findOne({ where: { email } });
   if (!user) {
     throw new Error("Thông tin đăng nhập không hợp lệ.");
@@ -25,11 +24,22 @@ const login = async (email, password) => {
   }
 
   const tokenData = jwtService.generateAccessToken(user.id);
-  const refreshToken = await refreshTokenService.createRefreshToken(user.id);
+  if (rememberMe) {
+    const refreshToken = await refreshTokenService.createRefreshToken(user.id);
+
+    return {
+      ...tokenData,
+      refreshToken: refreshToken.token,
+    };
+  }
+
   return {
     ...tokenData,
-    refreshToken: refreshToken.token,
   };
+};
+
+const checkUser = async (accessToken) => {
+  return jwtService.verifyAccessToken(accessToken);
 };
 
 const refreshAccessToken = async (refreshTokenString) => {
@@ -37,15 +47,14 @@ const refreshAccessToken = async (refreshTokenString) => {
     refreshTokenString
   );
   if (!refreshToken) {
-    throw new Error("Refresh token không hợp lệ");
+    throw new Error("Refresh token invalid");
   }
 
   const tokenData = jwtService.generateAccessToken(refreshToken.userId);
-  await refreshTokenService.deleteRefreshToken(refreshToken);
-
   const newRefreshToken = await refreshTokenService.createRefreshToken(
     refreshToken.userId
   );
+  await refreshTokenService.deleteRefreshToken(refreshToken);
 
   return {
     ...tokenData,
@@ -56,5 +65,6 @@ const refreshAccessToken = async (refreshTokenString) => {
 module.exports = {
   register,
   login,
+  checkUser,
   refreshAccessToken,
 };

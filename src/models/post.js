@@ -8,41 +8,44 @@ module.exports = (sequelize, DataTypes) => {
   }
   Post.init(
     {
-      userId: { type: DataTypes.INTEGER.UNSIGNED, unique: true },
+      userId: { type: DataTypes.INTEGER },
 
-      topic: DataTypes.STRING(191),
+      title: DataTypes.STRING(255),
 
-      title: DataTypes.STRING(191),
+      description: DataTypes.TEXT,
 
       slug: {
         type: DataTypes.STRING(191),
         unique: true,
-        allowNull: false,
-        defaultValue: "user",
       },
 
-      content: {
-        type: DataTypes.TEXT,
+      content: DataTypes.TEXT,
+
+      readTime: DataTypes.INTEGER,
+
+      thumbnail: DataTypes.STRING(255),
+
+      status: {
+        type: DataTypes.STRING(50),
+        defaultValue: "Draft",
       },
 
-      readTime: DataTypes.INTEGER.UNSIGNED,
+      metaTitle: DataTypes.STRING(255),
 
-      thumbnail: DataTypes.STRING(191),
-
-      status: DataTypes.STRING(191),
-
-      metaTitle: DataTypes.STRING(191),
-
-      metaDescription: DataTypes.STRING(191),
+      metaDescription: DataTypes.TEXT,
 
       visibility: {
-        type: DataTypes.ENUM("Public", "Followers only", "Only me"),
+        type: DataTypes.STRING(50),
         defaultValue: "Public",
       },
 
-      visibilityIcon: DataTypes.STRING(191),
+      visibilityIcon: DataTypes.STRING(255),
 
       allowComments: DataTypes.BOOLEAN,
+
+      viewsCount: DataTypes.INTEGER,
+
+      likesCount: DataTypes.INTEGER,
 
       publishedAt: DataTypes.DATE,
 
@@ -57,15 +60,34 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "Post",
       tableName: "posts",
       timestamps: true,
-      defaultScope: {
-        attributes: {
-          exclude: ["UserId"],
-        },
-      },
+      // defaultScope: {
+      //   attributes: {
+      //     exclude: ["UserId"],
+      //   },
+      // },
       hooks: {
-        beforeCreate: (post, options) => {
+        beforeCreate: async (post, options) => {
           if (post.title) {
-            post.slug = slugify(post.title, { lower: true, strict: true });
+            const baseSlug = slugify(post.title, {
+              lower: true,
+              strict: true,
+            });
+            let slug = baseSlug;
+            let counter = 1;
+            const existingSlug = await Post.findOne({
+              where: { slug },
+            });
+            while (existingSlug) {
+              slug = `${baseSlug}-${counter}`;
+              counter++;
+
+              const exists = await Post.findOne({
+                where: { slug },
+              });
+
+              if (!exists) break;
+            }
+            post.slug = slug;
           }
         },
       },
