@@ -27,7 +27,7 @@ const createRefreshToken = async (userId) => {
 
   return await RefreshToken.create({
     userId,
-    token: token,
+    token,
     expiredAt,
   });
 };
@@ -44,7 +44,11 @@ const findValidRefreshToken = async (token) => {
 };
 
 const deleteRefreshToken = async (refreshToken) => {
-  await refreshToken.destroy();
+  await RefreshToken.destroy({
+    where: {
+      token: refreshToken,
+    },
+  });
 };
 
 module.exports = {

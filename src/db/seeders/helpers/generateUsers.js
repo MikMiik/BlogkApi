@@ -1,7 +1,7 @@
 const { faker } = require("@faker-js/faker");
 const bcrypt = require("bcrypt");
 const generator = require("generate-password");
-const generateUniqueSlug = require("./generateUniqueSlug");
+const generateUniqueSlug = require("../../../utils/generateUniqueSlug");
 
 // Cấu hình faker cho tiếng Việt (tùy chọn)
 faker.locale = "vi";

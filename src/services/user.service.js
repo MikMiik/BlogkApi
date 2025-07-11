@@ -6,7 +6,21 @@ class UsersService {
   }
 
   async getById(id) {
-    const user = await User.findByPk(id);
+    const user = await User.findOne({
+      where: { id },
+      attributes: [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "username",
+        "address",
+        "avatar",
+        "introduction",
+        "role",
+        "status",
+      ],
+    });
     return user;
   }
 
