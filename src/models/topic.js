@@ -3,7 +3,12 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Topic extends Model {
     static associate(models) {
-      // define association here
+      Topic.belongsToMany(models.Post, {
+        through: "post_topic",
+        foreignKey: "topicId",
+        otherKey: "postId",
+        as: "posts",
+      });
     }
   }
   Topic.init(
@@ -12,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
 
       description: DataTypes.STRING(191),
 
-      icon: DataTypes.STRING(191),
+      image: DataTypes.STRING(191),
 
       isActive: DataTypes.BOOLEAN,
 

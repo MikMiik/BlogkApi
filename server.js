@@ -20,6 +20,7 @@ const cookieParser = require("cookie-parser");
 const notFoundHandler = require("@/middlewares/notFoundHandler");
 const errorHandler = require("@/middlewares/errorHandler");
 const responseEnhancer = require("@/middlewares/responseEnhancer");
+const handlePagination = require("@/middlewares/handlePagination");
 
 /*------------------------------------------------------------ */
 
@@ -36,6 +37,7 @@ app.use(express.urlencoded());
 app.use(cookieParser());
 app.use(methodOverride("_method"));
 app.use(responseEnhancer);
+app.use(handlePagination);
 
 // Router
 app.use("/api/v1", router);

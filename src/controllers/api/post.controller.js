@@ -7,8 +7,11 @@ exports.getList = async (req, res) => {
   let maxLimit = 20;
   if (limit > maxLimit) limit = maxLimit;
   const result = await postService.getAll(page, limit);
+  const { rows, count, featuredPosts, latestPosts } = result;
+  const total = count;
+  const items = { rows, featuredPosts, latestPosts };
   if (!result) throw404();
-  res.success(200, result);
+  res.paginate({ items, total });
 };
 
 exports.getOne = async (req, res) => {

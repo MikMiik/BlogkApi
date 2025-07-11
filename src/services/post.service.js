@@ -1,27 +1,109 @@
-const { Post, User, Comment } = require("@/models");
+const { Post, User, Comment, Topic } = require("@/models");
 const { Op } = require("sequelize");
 class PostsService {
   async getAll(page = 1, limit = 10) {
     const offset = (page - 1) * limit;
 
-    const { count, rows } = await Post.findAndCountAll({
+    const { rows, count } = await Post.findAndCountAll({
       limit,
       offset,
       order: [["createdAt", "DESC"]],
-      include: {
-        model: User,
-        as: "author",
-        attributes: ["id", "name", "email", "username"],
-      },
+      attributes: [
+        "id",
+        "title",
+        "description",
+        "slug",
+        "content",
+        "excerpt",
+        "readTime",
+        "thumbnail",
+        "viewsCount",
+        "likesCount",
+        "createdAt",
+        "publishedAt",
+      ],
+      include: [
+        {
+          model: User,
+          as: "author",
+          attributes: ["id", "firstName", "lastName", "avatar"],
+        },
+        {
+          model: Topic,
+          as: "topics",
+          attributes: ["name"],
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    const featuredPosts = await Post.findAll({
+      order: [["viewsCount", "DESC"]],
+      limit: 10,
+      attributes: [
+        "id",
+        "title",
+        "description",
+        "slug",
+        "content",
+        "excerpt",
+        "readTime",
+        "thumbnail",
+        "viewsCount",
+        "likesCount",
+        "publishedAt",
+        "viewsCount",
+      ],
+      include: [
+        {
+          model: User,
+          as: "author",
+          attributes: ["id", "firstName", "lastName", "avatar"],
+        },
+        {
+          model: Topic,
+          as: "topics",
+          attributes: ["name"],
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    const latestPosts = await Post.findAll({
+      order: [["publishedAt", "DESC"]],
+      limit: 10,
+      attributes: [
+        "id",
+        "title",
+        "description",
+        "slug",
+        "content",
+        "excerpt",
+        "readTime",
+        "thumbnail",
+        "viewsCount",
+        "likesCount",
+        "publishedAt",
+      ],
+      include: [
+        {
+          model: User,
+          as: "author",
+          attributes: ["id", "firstName", "lastName", "avatar"],
+        },
+        {
+          model: Topic,
+          as: "topics",
+          attributes: ["name"],
+          through: { attributes: [] },
+        },
+      ],
     });
     return {
-      data: rows,
-      pagination: {
-        totalItems: count,
-        totalPages: Math.ceil(count / limit),
-        currentPage: page,
-        pageSize: limit,
-      },
+      rows,
+      count,
+      featuredPosts,
+      latestPosts,
     };
   }
 

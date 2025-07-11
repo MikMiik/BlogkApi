@@ -3,7 +3,14 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Post extends Model {
     static associate(models) {
-      // define association here
+      Post.belongsTo(models.User, { as: "author", foreignKey: "userId" });
+      Post.hasMany(models.Comment, { as: "comments" });
+      Post.belongsToMany(models.Topic, {
+        through: "post_topic",
+        foreignKey: "postId",
+        otherKey: "topicId",
+        as: "topics",
+      });
     }
   }
   Post.init(
@@ -13,6 +20,8 @@ module.exports = (sequelize, DataTypes) => {
       title: DataTypes.STRING(255),
 
       description: DataTypes.TEXT,
+
+      excerpt: DataTypes.TEXT,
 
       slug: {
         type: DataTypes.STRING(191),
@@ -67,7 +76,7 @@ module.exports = (sequelize, DataTypes) => {
       // },
       hooks: {
         beforeCreate: async (post, options) => {
-          if (post.title) {
+          if (post.title && !post.slug) {
             const baseSlug = slugify(post.title, {
               lower: true,
               strict: true,
