@@ -1,5 +1,6 @@
 const { faker } = require("@faker-js/faker");
 const generateUniqueSlug = require("../../../utils/generateUniqueSlug");
+const getExcerptFromContent = require("./getExcerptFromContent");
 
 // Cấu hình faker cho tiếng Việt (tùy chọn)
 faker.locale = "vi";
@@ -10,12 +11,14 @@ async function generatePosts(count = 100, options = {}) {
   const slugs = new Set();
   for (let i = 0; i < count; i++) {
     const title = faker.lorem.sentence(3);
+    const content = faker.lorem.paragraphs(3);
     const post = {
       userId: faker.helpers.arrayElement(options.userIds),
       title,
       description: faker.lorem.sentence(3),
       slug: generateUniqueSlug(title, slugs),
-      content: faker.lorem.paragraphs(3),
+      content,
+      excerpt: getExcerptFromContent(content),
       readTime: faker.number.int({ min: 0, max: 10 }),
       thumbnail: `https://picsum.photos/seed/${i}/600/400`,
       status: faker.helpers.arrayElement(["Published", "Draft"]),

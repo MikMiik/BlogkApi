@@ -20,10 +20,10 @@ function paginate(res, items, total, page, limit) {
   success(res, 200, {
     items,
     pagination: {
-      current_page: page,
-      per_page: limit,
+      currentPage: page,
+      perPage: limit,
       total,
-      last_page: Math.ceil(total / limit),
+      lastPage: Math.ceil(total / limit),
     },
   });
 }
