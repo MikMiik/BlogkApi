@@ -19,6 +19,7 @@ class UsersService {
         "introduction",
         "role",
         "status",
+        "verifiedAt",
       ],
     });
     return user;

@@ -8,8 +8,8 @@ const register = async (data) => {
     ...data,
     password: await hashPassword(data.password),
   });
-
-  return jwtService.generateAccessToken({ userId: user.id });
+  const tokenData = jwtService.generateAccessToken(user.id);
+  return { user, tokenData };
 };
 
 const login = async (email, password, rememberMe) => {
@@ -43,9 +43,8 @@ const checkUser = async (accessToken) => {
 };
 
 const refreshAccessToken = async (refreshTokenString) => {
-  const refreshToken = await refreshTokenService.findValidRefreshToken(
-    refreshTokenString
-  );
+  const refreshToken =
+    await refreshTokenService.findValidRefreshToken(refreshTokenString);
   if (!refreshToken) {
     throw new Error("Refresh token invalid");
   }

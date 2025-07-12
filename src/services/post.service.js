@@ -112,22 +112,50 @@ class PostsService {
       where: {
         [Op.or]: [{ id: idOrSlug }, { slug: idOrSlug }],
       },
+      attributes: [
+        "id",
+        "title",
+        "description",
+        "content",
+        "readTime",
+        "viewsCount",
+        "likesCount",
+        "publishedAt",
+        "updatedAt",
+      ],
       include: [
+        {
+          model: Topic,
+          as: "topics",
+          attributes: ["name"],
+          through: { attributes: [] },
+        },
         {
           model: User,
           as: "author",
-          attributes: ["id", "name", "email", "username"],
+          attributes: [
+            "id",
+            "firstName",
+            "lastName",
+            "avatar",
+            "username",
+            "introduction",
+            "postsCount",
+            "followersCount",
+            "followingCount",
+          ],
         },
         {
           model: Comment,
+          as: "comments",
+          attributes: ["id", "parentId", "content", "createdAt", "updatedAt"],
           include: [
             {
               model: User,
               as: "commenter",
-              attributes: ["id", "name", "email", "username"],
+              attributes: ["id", "firstName", "lastName", "avatar"],
             },
           ],
-          as: "comments",
         },
       ],
     });

@@ -16,6 +16,9 @@ const methodOverride = require("method-override");
 // CookieImport
 const cookieParser = require("cookie-parser");
 
+// LayoutImport
+const expressLayouts = require("express-ejs-layouts");
+
 //MiddlewareImport
 const notFoundHandler = require("@/middlewares/notFoundHandler");
 const errorHandler = require("@/middlewares/errorHandler");
@@ -38,6 +41,12 @@ app.use(cookieParser());
 app.use(methodOverride("_method"));
 app.use(responseEnhancer);
 app.use(handlePagination);
+
+// ViewEngine
+app.use(expressLayouts);
+app.set("view engine", "ejs");
+app.set("views", "./src/views");
+app.set("layout", "./layouts/default");
 
 // Router
 app.use("/api/v1", router);

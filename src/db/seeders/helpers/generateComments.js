@@ -9,10 +9,12 @@ async function generateComments(count = 100, options = {}) {
 
   for (let i = 0; i < count; i++) {
     const comment = {
-      postId: faker.helpers.arrayElement(options.postIds),
       userId: faker.helpers.arrayElement(options.userIds),
       parentId: null,
       content: faker.lorem.paragraphs(3),
+      commentableId: faker.helpers.arrayElement(options.postIds),
+      commentableType: "Post",
+      deletedAt: null,
       createdAt: faker.date.between({
         from: "2022-01-01T00:00:00.000Z",
         to: "2025-06-14T00:00:00.000Z",

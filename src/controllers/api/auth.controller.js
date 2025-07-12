@@ -1,9 +1,8 @@
 const usersService = require("@/services/user.service");
 const authService = require("@/services/auth.service");
 const { deleteRefreshToken } = require("@/services/refreshToken.service");
-// const transporter = require("@/configs/admin/mailer");
-// const { createToken, verifyToken } = require("@/utils/jwt");
-// const queue = require("@/utils/queue");
+const queue = require("@/utils/queue");
+const { verifyAccessToken } = require("@/services/jwt.service");
 
 exports.login = async (req, res) => {
   try {
@@ -21,7 +20,13 @@ exports.login = async (req, res) => {
 exports.register = async (req, res) => {
   let { confirmPassword, agreeToTerms, ...data } = req.body;
   try {
-    const tokenData = await authService.register(data);
+    const { user, tokenData } = await authService.register(data);
+    const verifyUrl = `${req.protocol}://${req.host}/api/v1/auth/verify-email?token=${tokenData.accessToken}`;
+    queue.dispatch("sendVerifyEmailJob", {
+      userId: user.id,
+      token: tokenData.token,
+      verifyUrl,
+    });
     res.success(201, tokenData);
   } catch (error) {
     res.error(400, error.message);
@@ -68,23 +73,21 @@ exports.logout = async (req, res) => {
 //   await transporter.sendMail(message);
 // };
 
-// exports.verifyEmail = async (req, res) => {
-//   const token = req.query.token;
-//   const result = verifyToken(token);
-//   if (result.success) {
-//     const userId = result.data.userId;
-//     const user = await usersService.getById(userId);
-//     if (user.verified_at) {
-//       req.flash("info", "Verification link is expired or invalid");
-//       console.log(req.flash);
-//       return res.redirect("/admin/login");
-//     }
-//     await usersService.update(userId, {
-//       verified_at: new Date(),
-//     });
-//     req.flash("success", "Verify success");
-//     return res.redirect("/admin/login");
-//   }
-//   req.flash("error", "Verify failed");
-//   res.redirect("/admin/login");
-// };
+exports.verifyEmail = async (req, res) => {
+  const token = req.query.token;
+  const result = verifyAccessToken(token);
+  if (result) {
+    const userId = result.userId;
+    const user = await usersService.getById(userId);
+    const tokenExpired = result.exp * 1000 < Date.now();
+    console.log(tokenExpired);
+    if (user.dataValues.verifiedAt || tokenExpired) {
+      return res.error(403, "Verification token is invalid or expired");
+    }
+    await usersService.update(userId, {
+      verifiedAt: new Date(),
+    });
+    return res.success(200, "Email verified successfully");
+  }
+  res.error(403, "Verification token is invalid or expired");
+};
