@@ -5,7 +5,9 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
+    "ejs": "^3.1.10",
     "express": "^5.1.0",
+    "express-ejs-layouts": "^2.5.1",
     "generate-password": "^1.7.1",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
@@ -15,7 +17,9 @@
     "multer": "^2.0.1",
     "mysql": "^2.18.1",
     "mysql2": "^3.14.1",
+    "nodemailer": "^7.0.5",
     "npm": "^11.4.2",
+    "prettier-plugin-ejs": "^1.0.3",
     "pusher": "^5.2.0",
     "sequelize": "^6.37.7",
     "slugify": "^1.6.6"
@@ -33,7 +37,8 @@
     "model:generate": "npx sequelize-cli model:generate",
     "model:create": "npx sequelize-cli model:create",
     "seed:generate": "npx sequelize-cli seed:generate",
-    "seed:create": "npx sequelize-cli seed:create"
+    "seed:create": "npx sequelize-cli seed:create",
+    "queue": "node --watch ./src/workers/queueWorker.js"
   },
   "_moduleAliases": {
     "@": "src"

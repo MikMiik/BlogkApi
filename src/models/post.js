@@ -4,7 +4,14 @@ module.exports = (sequelize, DataTypes) => {
   class Post extends Model {
     static associate(models) {
       Post.belongsTo(models.User, { as: "author", foreignKey: "userId" });
-      Post.hasMany(models.Comment, { as: "comments" });
+      Post.hasMany(models.Comment, {
+        foreignKey: "commentableId",
+        constraints: false,
+        scope: {
+          commentableType: "Post",
+        },
+        as: "comments",
+      });
       Post.belongsToMany(models.Topic, {
         through: "post_topic",
         foreignKey: "postId",
@@ -69,11 +76,6 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "Post",
       tableName: "posts",
       timestamps: true,
-      // defaultScope: {
-      //   attributes: {
-      //     exclude: ["UserId"],
-      //   },
-      // },
       hooks: {
         beforeCreate: async (post, options) => {
           if (post.title && !post.slug) {
