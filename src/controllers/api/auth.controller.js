@@ -2,11 +2,15 @@ const usersService = require("@/services/user.service");
 const authService = require("@/services/auth.service");
 const { deleteRefreshToken } = require("@/services/refreshToken.service");
 const queue = require("@/utils/queue");
-const { verifyAccessToken } = require("@/services/jwt.service");
+const {
+  verifyMailToken,
+  generateAccessToken,
+} = require("@/services/jwt.service");
 
 exports.login = async (req, res) => {
   try {
     const tokenData = await authService.login(
+      req,
       req.body.email,
       req.body.password,
       req.body.rememberMe
@@ -21,7 +25,7 @@ exports.register = async (req, res) => {
   let { confirmPassword, agreeToTerms, ...data } = req.body;
   try {
     const { user, tokenData } = await authService.register(data);
-    const verifyUrl = `${req.protocol}://${req.host}/api/v1/auth/verify-email?token=${tokenData.accessToken}`;
+    const verifyUrl = `${req.protocol}://${req.host}/api/v1/auth/verify-email?token=${tokenData.token}`;
     queue.dispatch("sendVerifyEmailJob", {
       userId: user.id,
       token: tokenData.token,
@@ -75,19 +79,19 @@ exports.logout = async (req, res) => {
 
 exports.verifyEmail = async (req, res) => {
   const token = req.query.token;
-  const result = verifyAccessToken(token);
+  const result = verifyMailToken(token);
   if (result) {
     const userId = result.userId;
     const user = await usersService.getById(userId);
     const tokenExpired = result.exp * 1000 < Date.now();
-    console.log(tokenExpired);
     if (user.dataValues.verifiedAt || tokenExpired) {
       return res.error(403, "Verification token is invalid or expired");
     }
     await usersService.update(userId, {
       verifiedAt: new Date(),
     });
-    return res.success(200, "Email verified successfully");
+    const { accessToken } = generateAccessToken(userId);
+    return res.redirect(`http://localhost:5173/verified?token=${accessToken}`);
   }
   res.error(403, "Verification token is invalid or expired");
 };
