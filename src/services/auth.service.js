@@ -21,7 +21,7 @@ const login = async (req, email, password, rememberMe) => {
 
   if (!user.dataValues.verifiedAt) {
     const tokenData = jwtService.generateMailToken(user.dataValues.id);
-    const verifyUrl = `${req.protocol}://${req.host}/api/v1/auth/verify-email?token=${tokenData.token}`;
+    const verifyUrl = `http://localhost:5173/login?token=${tokenData.token}`;
     queue.dispatch("sendVerifyEmailJob", {
       userId: user.id,
       token: tokenData.token,

@@ -2,9 +2,11 @@ require("module-alias/register");
 require("dotenv").config();
 const queueService = require("@/services/queue.service");
 const sendVerifyEmailJob = require("@/jobs/sendVerifyEmailJob");
+const sendForgotPasswordEmailJob = require("@/jobs/sendForgotPasswordEmailJob");
 
 const handlers = {
   sendVerifyEmailJob,
+  sendForgotPasswordEmailJob,
 };
 
 async function queueWorker() {

@@ -5,7 +5,9 @@ const queue = require("@/utils/queue");
 const {
   verifyMailToken,
   generateAccessToken,
+  generateMailToken,
 } = require("@/services/jwt.service");
+const { hashPassword } = require("@/utils/bcrytp");
 
 exports.login = async (req, res) => {
   try {
@@ -25,7 +27,7 @@ exports.register = async (req, res) => {
   let { confirmPassword, agreeToTerms, ...data } = req.body;
   try {
     const { user, tokenData } = await authService.register(data);
-    const verifyUrl = `${req.protocol}://${req.host}/api/v1/auth/verify-email?token=${tokenData.token}`;
+    const verifyUrl = `http://localhost:5173/login?token=${tokenData.token}`;
     queue.dispatch("sendVerifyEmailJob", {
       userId: user.id,
       token: tokenData.token,
@@ -62,36 +64,45 @@ exports.logout = async (req, res) => {
   res.success(200, "Logged out successfully");
 };
 
-// exports.sendForgotEmail = async (req, res) => {
-//   const message = {
-//     from: process.env.MAIL_SENDER_FROM,
-//     to: req.body.email,
-//     subject: "Reset Link",
-//     html: `
-//     <div>
-//       <p style = "color: red"> Bye </p>
-//       <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPgVqPfCA2AvKZIYM_vcKxX0ZSxJBeb7YUDQ&s"/>
-//     </div>
-//     `,
-//   };
-//   await transporter.sendMail(message);
-// };
+exports.sendForgotEmail = async (req, res) => {
+  const user = await usersService.getByEmail(req.body.email);
+  if (user) {
+    const tokenData = generateMailToken(user.id);
+    const verifyUrl = `http://localhost:5173/reset-password?token=${tokenData.token}`;
+    queue.dispatch("sendForgotPasswordEmailJob", {
+      userId: user.dataValues.id,
+      token: tokenData.token,
+      verifyUrl,
+    });
+  }
+  res.success(200, "If that email exists, a reset link has been sent.");
+};
 
 exports.verifyEmail = async (req, res) => {
-  const token = req.query.token;
+  const { token } = req.query;
   const result = verifyMailToken(token);
   if (result) {
     const userId = result.userId;
     const user = await usersService.getById(userId);
-    const tokenExpired = result.exp * 1000 < Date.now();
-    if (user.dataValues.verifiedAt || tokenExpired) {
+    if (user.dataValues.verifiedAt) {
       return res.error(403, "Verification token is invalid or expired");
     }
     await usersService.update(userId, {
       verifiedAt: new Date(),
     });
     const { accessToken } = generateAccessToken(userId);
-    return res.redirect(`http://localhost:5173/verified?token=${accessToken}`);
+    return res.success(200, { accessToken });
   }
-  res.error(403, "Verification token is invalid or expired");
+};
+
+exports.verifyResetToken = async (req, res) => {
+  const { token } = req.query;
+  const result = verifyMailToken(token);
+  res.success(200, { userId: result.userId });
+};
+
+exports.resetPassword = async (req, res) => {
+  const password = await hashPassword(req.body.password);
+  await usersService.update(req.body.userId, { password });
+  res.success(200, "Reset password successful");
 };
