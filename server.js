@@ -6,6 +6,7 @@ const cors = require("cors");
 const app = express();
 const port = 3000;
 const { sequelize } = require("@/models");
+const env = require("@/configs/env.js");
 
 // RouterImport
 const router = require("@/routes/api/index");

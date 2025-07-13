@@ -24,6 +24,12 @@ class UsersService {
     });
     return user;
   }
+  async getByEmail(email) {
+    const user = await User.findOne({
+      where: { email },
+    });
+    return user;
+  }
 
   async create(data) {
     const user = await User.create(data);
