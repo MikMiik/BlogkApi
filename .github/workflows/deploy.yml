@@ -18,7 +18,6 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github-actions
           ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
 
-          # Cấu hình SSH để dùng đúng key
           echo "Host ${{ secrets.SSH_HOST }}" >> ~/.ssh/config
           echo "  HostName ${{ secrets.SSH_HOST }}" >> ~/.ssh/config
           echo "  User ${{ secrets.SSH_USER }}" >> ~/.ssh/config
@@ -35,7 +34,7 @@ jobs:
             echo "📦 Installing dependencies..."
             npm install
             echo "🔁 Restarting PM2 process..."
-            pm2 restart server  # thay "blog-api" bằng tên app bạn dùng trong pm2
+            pm2 restart server  
           EOF
 
       - name: 🧹 Cleanup SSH
