@@ -1,12 +1,13 @@
 // InitImport
 require("module-alias/register");
 require("dotenv").config();
+require("@/configs/env.js");
 const express = require("express");
 const cors = require("cors");
 const app = express();
 const port = 3000;
 const { sequelize } = require("@/models");
-const env = require("@/configs/env.js");
+const { domain } = require("@/configs");
 
 // RouterImport
 const router = require("@/routes/api/index");
@@ -31,10 +32,11 @@ const handlePagination = require("@/middlewares/handlePagination");
 // Middleware
 app.use(
   cors({
-    origin: ["http://blogk.online", "http://localhost:5173"],
+    origin: [domain.CLIENT_URL],
     credentials: true,
   })
 );
+app.set("trust proxy", true);
 app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded());
