@@ -35,7 +35,7 @@ jobs:
             echo "📦 Installing dependencies..."
             npm install
             echo "🔁 Restarting PM2 process..."
-            pm2 restart blog-api  # thay "blog-api" bằng tên app bạn dùng trong pm2
+            pm2 restart server  # thay "blog-api" bằng tên app bạn dùng trong pm2
           EOF
 
       - name: 🧹 Cleanup SSH
