@@ -37,8 +37,8 @@ class UsersService {
   }
 
   async update(id, data) {
-    const user = await User.update(data, { where: { id } });
-    return user;
+    await User.update(data, { where: { id } });
+    return { message: "Reset password successful" };
   }
 
   async remove(id) {

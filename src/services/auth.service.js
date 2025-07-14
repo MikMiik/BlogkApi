@@ -1,7 +1,14 @@
 const { User } = require("@/models");
 const { hashPassword, comparePassword } = require("@/utils/bcrytp");
-const jwtService = require("./jwt.service");
-const refreshTokenService = require("@/services/refreshToken.service");
+const { verifyAccessToken, generateMailToken } = require("./jwt.service");
+const {
+  findValidRefreshToken,
+  deleteRefreshToken,
+} = require("./refreshToken.service");
+const sendUnverifiedUserEmail = require("@/utils/sendUnverifiedUserEmail");
+const buildTokenResponse = require("@/utils/buildTokenResponse");
+const generateClientUrl = require("@/utils/generateClientUrl");
+const userService = require("./user.service");
 const queue = require("@/utils/queue");
 
 const register = async (data) => {
@@ -9,70 +16,91 @@ const register = async (data) => {
     ...data,
     password: await hashPassword(data.password),
   });
-  const tokenData = jwtService.generateMailToken(user.id);
-  return { user, tokenData };
-};
 
-const login = async (req, email, password, rememberMe) => {
-  const user = await User.findOne({ where: { email } });
-  if (!user) {
-    throw new Error("Invalid login information.");
-  }
-
-  if (!user.dataValues.verifiedAt) {
-    const tokenData = jwtService.generateMailToken(user.dataValues.id);
-    const verifyUrl = `http://localhost:5173/login?token=${tokenData.token}`;
-    queue.dispatch("sendVerifyEmailJob", {
-      userId: user.id,
-      token: tokenData.token,
-      verifyUrl,
-    });
-    throw new Error(
-      "Your account has not verified yet, please check your email to verify"
-    );
-  }
-
-  const isValid = await comparePassword(password, user.password);
-  if (!isValid) {
-    throw new Error("Invalid login information");
-  }
-
-  const tokenData = jwtService.generateAccessToken(user.id);
-  if (rememberMe) {
-    const refreshToken = await refreshTokenService.createRefreshToken(user.id);
-
-    return {
-      ...tokenData,
-      refreshToken: refreshToken.token,
-    };
-  }
-
+  sendUnverifiedUserEmail(user.id);
   return {
-    ...tokenData,
+    message:
+      "Registration successful. Please check your email to verify your account.",
   };
 };
 
+const login = async (data) => {
+  const { email, password, rememberMe } = data;
+  const user = await User.findOne({ where: { email } });
+
+  if (!user || !(await comparePassword(password, user.password))) {
+    throw new Error("Invalid login information.");
+  }
+
+  if (!user.verifiedAt) {
+    sendUnverifiedUserEmail(user.id);
+    throw new Error(
+      "Your account is not verified. Please check the link we sent to your email to verify."
+    );
+  }
+
+  try {
+    const result = await buildTokenResponse({ userId: user.id, rememberMe });
+    return result;
+  } catch (err) {
+    throw new Error("Failed to generate authentication tokens.");
+  }
+};
+
 const checkUser = async (accessToken) => {
-  return jwtService.verifyAccessToken(accessToken);
+  return verifyAccessToken(accessToken);
 };
 
 const refreshAccessToken = async (refreshTokenString) => {
-  const refreshToken =
-    await refreshTokenService.findValidRefreshToken(refreshTokenString);
+  const refreshToken = await findValidRefreshToken(refreshTokenString);
   if (!refreshToken) {
     throw new Error("Refresh token invalid");
   }
 
-  const tokenData = jwtService.generateAccessToken(refreshToken.userId);
-  const newRefreshToken = await refreshTokenService.createRefreshToken(
-    refreshToken.userId
-  );
-  await refreshTokenService.deleteRefreshToken(refreshToken);
+  try {
+    const result = await buildTokenResponse({
+      userId: refreshToken.id,
+      hasRefreshToken: refreshToken,
+    });
+    await deleteRefreshToken(refreshToken);
+    return result;
+  } catch (err) {
+    throw new Error("Failed to generate authentication tokens.");
+  }
+};
 
-  return {
-    ...tokenData,
-    refreshToken: newRefreshToken.token,
-  };
+const logout = async (refreshToken) => {
+  if (!refreshToken)
+    return {
+      message: "No refresh token provided — assumed short session logout.",
+    };
+  await deleteRefreshToken(refreshToken);
+};
+
+const sendForgotEmail = async (email) => {
+  try {
+    const user = await userService.getByEmail(email);
+    if (user) {
+      const tokenData = generateMailToken(user.id);
+      const resetPasswordUrl = generateClientUrl("reset-password", {
+        token: tokenData.token,
+      });
+
+      queue.dispatch("sendForgotPasswordEmailJob", {
+        userId: user.id,
+        token: tokenData.token,
+        resetPasswordUrl,
+      });
+    }
+    return {
+      message:
+        "If your email exists in our system, a password reset link has been sent.",
+    };
+  } catch (error) {
+    throw new Error(
+      "Failed to send password reset email. Please try again later."
+    );
+  }
 };
 
 module.exports = {
@@ -80,4 +108,6 @@ module.exports = {
   login,
   checkUser,
   refreshAccessToken,
+  logout,
+  sendForgotEmail,
 };

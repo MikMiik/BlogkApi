@@ -1,53 +1,45 @@
 const jwt = require("jsonwebtoken");
-const {
-  JWT_SECRET,
-  JWT_EXPIRES_IN,
-  TOKEN_TYPE,
-  MAIL_JWT_EXPIRES_IN,
-  MAIL_TOKEN_TYPE,
-  MAIL_JWT_SECRET,
-} = require("@/configs/auth");
-const throwError = require("@/utils/throwError");
+const { mail, auth } = require("@/configs");
 
 const generateAccessToken = (userId) => {
-  const token = jwt.sign({ userId }, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
+  const token = jwt.sign({ userId }, auth.JWT_SECRET, {
+    expiresIn: auth.JWT_EXPIRES_IN,
   });
 
   return {
     accessToken: token,
-    tokenType: TOKEN_TYPE,
-    expiresIn: JWT_EXPIRES_IN,
+    tokenType: auth.TOKEN_TYPE,
+    expiresIn: auth.JWT_EXPIRES_IN,
   };
 };
 
 const generateMailToken = (userId) => {
-  const token = jwt.sign({ userId }, MAIL_JWT_SECRET, {
-    expiresIn: MAIL_JWT_EXPIRES_IN,
+  const token = jwt.sign({ userId }, mail.MAIL_JWT_SECRET, {
+    expiresIn: mail.MAIL_JWT_EXPIRES_IN,
   });
 
   return {
     token,
-    tokenType: MAIL_TOKEN_TYPE,
-    expiresIn: MAIL_JWT_EXPIRES_IN,
+    tokenType: mail.MAIL_TOKEN_TYPE,
+    expiresIn: mail.MAIL_JWT_EXPIRES_IN,
   };
 };
 
 const verifyAccessToken = (token) => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, auth.JWT_SECRET);
     return decoded;
   } catch (err) {
-    throwError(401, `${err.name} ${err.message}`);
+    throw new Error(`${err.name} ${err.message}`);
   }
 };
 
 const verifyMailToken = (token) => {
   try {
-    const decoded = jwt.verify(token, MAIL_JWT_SECRET);
+    const decoded = jwt.verify(token, mail.MAIL_JWT_SECRET);
     return decoded;
   } catch (err) {
-    throwError(401, `${err.name} ${err.message}`);
+    throw new Error(`${err.name} ${err.message}`);
   }
 };
 

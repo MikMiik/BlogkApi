@@ -1,5 +1,6 @@
 const transporter = require("@/configs/mailer");
 const usersService = require("@/services/user.service");
+const { mail } = require("@/configs");
 const loadMail = require("@/utils/loadEmail");
 
 async function sendVerifyEmailJob(job) {
@@ -12,7 +13,7 @@ async function sendVerifyEmailJob(job) {
     verifyUrl,
   });
   const message = {
-    from: process.env.MAIL_SENDER_FROM,
+    from: mail.SENDER_FROM,
     to: "minh093653243@gmail.com",
     subject: "Verify Message",
     html: template,
