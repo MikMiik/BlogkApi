@@ -33,8 +33,10 @@ jobs:
             git pull origin ${{ secrets.MAIN_BRANCH }}
             echo "📦 Installing dependencies..."
             npm install
+            echo "🏗️ Building production..."
+            npm run build
             echo "🔁 Restarting PM2 process..."
-            pm2 restart server  
+            pm2 restart server || pm2 start server.js --name server --env production --watch
           EOF
 
       - name: 🧹 Cleanup SSH
