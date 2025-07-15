@@ -3,7 +3,7 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Image extends Model {
     static associate(models) {
-      // define association here
+      Image.belongsTo(models.Post, { as: "images", foreignKey: "postId" });
     }
   }
   Image.init(
