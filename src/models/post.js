@@ -12,6 +12,9 @@ module.exports = (sequelize, DataTypes) => {
         },
         as: "comments",
       });
+      Post.hasMany(models.Image, {
+        as: "images",
+      });
       Post.belongsToMany(models.Topic, {
         through: "post_topic",
         foreignKey: "postId",

@@ -1,4 +1,4 @@
-const { Post, User, Comment, Topic } = require("@/models");
+const { Post, User, Comment, Topic, Image } = require("@/models");
 const { Op } = require("sequelize");
 class PostsService {
   async getAll(page = 1, limit = 10) {
@@ -117,6 +117,7 @@ class PostsService {
         "title",
         "description",
         "content",
+        "thumbnail",
         "readTime",
         "viewsCount",
         "likesCount",
@@ -156,6 +157,11 @@ class PostsService {
               attributes: ["id", "firstName", "lastName", "avatar"],
             },
           ],
+        },
+        {
+          model: Image,
+          as: "images",
+          attributes: ["url", "altText"],
         },
       ],
     });
