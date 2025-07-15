@@ -1,7 +1,7 @@
 // InitImport
 require("module-alias/register");
 require("dotenv").config();
-require("@/configs/env.js");
+// require("@/configs/env.js");
 const express = require("express");
 const cors = require("cors");
 const app = express();

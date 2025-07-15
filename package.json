@@ -25,8 +25,7 @@
     "slugify": "^1.6.6"
   },
   "scripts": {
-    "start": "NODE_ENV=production node --watch server.js",
-    "dev": "NODE_ENV=development node --watch server.js",
+    "start": "node --watch server.js",
     "migration:create": "npx sequelize-cli migration:create",
     "db:migrate": "npx sequelize-cli db:migrate",
     "db:migrate:undo": "npx sequelize-cli db:migrate:undo",
