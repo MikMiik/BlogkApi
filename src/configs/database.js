@@ -1,6 +1,7 @@
 const fs = require("fs");
 require("module-alias/register");
 require("dotenv").config();
+console.log(process.env.DB_USER);
 
 module.exports = {
   development: {
