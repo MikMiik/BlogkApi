@@ -4,6 +4,21 @@ const getExcerptFromContent = require("./getExcerptFromContent");
 
 // Cấu hình faker cho tiếng Việt (tùy chọn)
 faker.locale = "vi";
+function generateFakeHTMLContent() {
+  let content = "";
+  const imgUrls = [];
+
+  // Đoạn văn + hình ảnh đan xen
+  for (let i = 0; i < 5; i++) {
+    content += `<p>${faker.lorem.paragraph()}</p>`;
+    const imgUrl = `https://picsum.photos/seed/${Math.random() * i}/600/400`;
+    imgUrls.push(imgUrl);
+    // Chèn ảnh giả
+    content += `<img src="${imgUrl}" alt="image" style="max-width: 100%; height: auto;" />`;
+  }
+
+  return { content, imgUrls };
+}
 
 // Hàm tạo dữ liệu user giả
 async function generatePosts(count = 100, options = {}) {
@@ -11,7 +26,7 @@ async function generatePosts(count = 100, options = {}) {
   const slugs = new Set();
   for (let i = 0; i < count; i++) {
     const title = faker.lorem.sentence(3);
-    const content = faker.lorem.paragraphs(3);
+    const { content } = generateFakeHTMLContent();
     const post = {
       userId: faker.helpers.arrayElement(options.userIds),
       title,

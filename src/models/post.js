@@ -21,6 +21,12 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: "topicId",
         as: "topics",
       });
+      Post.belongsToMany(models.Tag, {
+        through: "post_tag",
+        foreignKey: "postId",
+        otherKey: "tagId",
+        as: "tags",
+      });
     }
   }
   Post.init(

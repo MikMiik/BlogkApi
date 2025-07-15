@@ -26,6 +26,8 @@ module.exports = (sequelize, DataTypes) => {
 
       role: { type: DataTypes.STRING(191), defaultValue: "User" },
 
+      socials: DataTypes.JSON,
+
       status: DataTypes.STRING(191),
 
       lastLogin: DataTypes.DATE,
