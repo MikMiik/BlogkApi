@@ -1,3 +1,3 @@
 module.exports = {
-  CLIENT_URL: process.env.DOMAIN || "http://localhost:5173",
+  CLIENT_URL: process.env.CLIENT_URL || "http://localhost:5173",
 };

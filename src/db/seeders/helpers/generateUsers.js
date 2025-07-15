@@ -45,7 +45,12 @@ async function generateUsers(count = 100) {
     do {
       username = createUsernameSlug(name, slugs);
     } while (usedUsername.has(username));
-
+    const socials = {
+      twitter: `https://twitter.com/${username}`,
+      github: `https://github.com/${username}`,
+      linkedin: `https://www.linkedin.com/in/${username.toLowerCase()}`,
+      website: faker.internet.url(),
+    };
     const user = {
       firstName,
       lastName,
@@ -57,12 +62,12 @@ async function generateUsers(count = 100) {
         })
       ),
       role: faker.helpers.arrayElement(["User", "Developer", "Senior"]),
+      socials: JSON.stringify(socials),
       username,
       status: faker.helpers.arrayElement(["Active", "Offline"]),
       phone,
       birthday: faker.date.birthdate({ min: 18, max: 80, mode: "age" }),
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
-      // gender: faker.helpers.arrayElement(["Male", "Female", "Other"]),
       address: faker.location.streetAddress(true),
       introduction: faker.lorem.sentence(),
       lastLogin: faker.date.between({

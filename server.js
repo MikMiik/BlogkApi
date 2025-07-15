@@ -32,7 +32,7 @@ const handlePagination = require("@/middlewares/handlePagination");
 // Middleware
 app.use(
   cors({
-    origin: [domain.CLIENT_URL],
+    origin: [domain.CLIENT_URL, "http://localhost:5173/"],
     credentials: true,
   })
 );

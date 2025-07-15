@@ -74,6 +74,7 @@ exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.query;
     const { userId } = verifyMailToken(token);
+    console.log(userId);
     await usersService.update(userId, {
       verifiedAt: new Date(),
     });
