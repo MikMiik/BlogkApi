@@ -12,7 +12,7 @@ const userService = require("./user.service");
 const queue = require("@/utils/queue");
 
 const register = async (data) => {
-  const user = await User.create({
+  const user = await userService.create({
     ...data,
     password: await hashPassword(data.password),
   });
@@ -25,22 +25,11 @@ const register = async (data) => {
 };
 
 const login = async (data) => {
-  const { email, password, rememberMe } = data;
-  const user = await User.findOne({ where: { email } });
-
-  if (!user || !(await comparePassword(password, user.password))) {
-    throw new Error("Invalid login information.");
-  }
-
-  if (!user.verifiedAt) {
-    sendUnverifiedUserEmail(user.id);
-    throw new Error(
-      "Your account is not verified. Please check the link we sent to your email to verify."
-    );
-  }
-
   try {
+    const { email, rememberMe } = data;
+    const user = await userService.getByEmail(email);
     const result = await buildTokenResponse({ userId: user.id, rememberMe });
+    await userService.update(user.id, { lastLogin: new Date() });
     return result;
   } catch (err) {
     throw new Error("Failed to generate authentication tokens.");

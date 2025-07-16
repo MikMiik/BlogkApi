@@ -1,10 +1,10 @@
 const express = require("express");
 const authController = require("@/controllers/api/auth.controller");
 const router = express.Router();
-// const authValidator = require("@/validators/admin/auth.validator");
+const authValidator = require("@/validators/auth.validator");
 
-router.post("/login", authController.login);
-router.post("/register", authController.register);
+router.post("/login", authValidator.login, authController.login);
+router.post("/register", authValidator.register, authController.register);
 router.get("/me", authController.me);
 router.post("/refresh-token", authController.refreshToken);
 router.post("/logout", authController.logout);
