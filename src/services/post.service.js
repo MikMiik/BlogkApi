@@ -157,7 +157,14 @@ class PostsService {
         {
           model: Comment,
           as: "comments",
-          attributes: ["id", "parentId", "content", "createdAt", "updatedAt"],
+          attributes: [
+            "id",
+            "parentId",
+            "content",
+            "likesCount",
+            "createdAt",
+            "updatedAt",
+          ],
           include: [
             {
               model: User,

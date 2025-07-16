@@ -9,6 +9,14 @@ module.exports = (sequelize, DataTypes) => {
         as: "post",
       });
       Comment.belongsTo(models.User, { as: "commenter", foreignKey: "userId" });
+      Comment.hasMany(Comment, {
+        as: "replies",
+        foreignKey: "parentId",
+      });
+      Comment.belongsTo(Comment, {
+        as: "parent",
+        foreignKey: "parentId",
+      });
     }
   }
   Comment.init(
@@ -23,6 +31,10 @@ module.exports = (sequelize, DataTypes) => {
 
       commentableType: DataTypes.STRING(191),
 
+      likesCount: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
       createdAt: DataTypes.DATE,
 
       updatedAt: DataTypes.DATE,
