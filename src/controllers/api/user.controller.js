@@ -8,9 +8,7 @@ exports.getList = async (req, res) => {
 };
 
 exports.getOne = async (req, res) => {
-  const data = {
-    ...req.user.dataValues,
-  };
+  const data = req.user;
   res.success(200, data);
 };
 

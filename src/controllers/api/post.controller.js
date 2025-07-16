@@ -15,9 +15,7 @@ exports.getList = async (req, res) => {
 };
 
 exports.getOne = async (req, res) => {
-  const data = {
-    ...req.post.dataValues,
-  };
+  const data = req.post;
   res.success(200, data);
 };
 

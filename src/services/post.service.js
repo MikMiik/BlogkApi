@@ -173,7 +173,53 @@ class PostsService {
         },
       ],
     });
-    return post;
+
+    let relatedPosts = [];
+    if (post && post.topics && post.topics.length > 0) {
+      const topicNames = post.topics.map((topic) => topic.name);
+      relatedPosts = await Post.findAll({
+        attributes: [
+          "id",
+          "title",
+          "description",
+          "slug",
+          "content",
+          "excerpt",
+          "readTime",
+          "thumbnail",
+          "viewsCount",
+          "likesCount",
+          "publishedAt",
+        ],
+        include: [
+          {
+            model: Topic,
+            as: "topics",
+            attributes: ["name"],
+            where: {
+              name: {
+                [Op.in]: topicNames,
+              },
+            },
+            through: { attributes: [] },
+          },
+          {
+            model: User,
+            as: "author",
+            attributes: ["id", "firstName", "lastName", "avatar"],
+          },
+        ],
+        where: {
+          id: {
+            [Op.ne]: post.id, // ne = not equal
+          },
+        },
+        limit: 20,
+        order: [["publishedAt", "DESC"]],
+        distinct: true,
+      });
+    }
+    return { post, relatedPosts };
   }
 
   async create(data) {

@@ -2,8 +2,12 @@ const jwtService = require("@/services/jwt.service");
 const userService = require("@/services/user.service");
 
 async function checkAuth(req, res, next) {
+  console.log(req);
   try {
-    const notAuthRequired = req.path.startsWith("/auth");
+    const publicPaths = ["/about", "/contact", "/auth"];
+
+    const notAuthRequired =
+      req.path === "/" || publicPaths.some((path) => req.path.startsWith(path));
     if (notAuthRequired) {
       return next();
     }
