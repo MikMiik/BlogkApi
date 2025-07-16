@@ -13,7 +13,6 @@ const buildTokenResponse = async ({
     const refreshToken = await createRefreshToken(userId);
     result.refreshToken = refreshToken.token;
   }
-
   return result;
 };
 

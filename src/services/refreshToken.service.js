@@ -44,6 +44,7 @@ const findValidRefreshToken = async (token) => {
 };
 
 const deleteRefreshToken = async (refreshToken) => {
+  console.log(refreshToken);
   await RefreshToken.destroy({
     where: {
       token: refreshToken,

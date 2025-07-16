@@ -56,13 +56,13 @@ const refreshAccessToken = async (refreshTokenString) => {
   if (!refreshToken) {
     throw new Error("Refresh token invalid");
   }
-
   try {
     const result = await buildTokenResponse({
-      userId: refreshToken.id,
-      hasRefreshToken: refreshToken,
+      userId: refreshToken.userId,
+      rememberMe: null,
+      hasRefreshToken: true,
     });
-    await deleteRefreshToken(refreshToken);
+    await deleteRefreshToken(refreshToken.token);
     return result;
   } catch (err) {
     throw new Error("Failed to generate authentication tokens.");
