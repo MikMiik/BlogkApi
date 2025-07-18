@@ -165,11 +165,12 @@ class PostsService {
             "createdAt",
             "updatedAt",
           ],
+          order: [["createdAt", "DESC"]],
           include: [
             {
               model: User,
               as: "commenter",
-              attributes: ["id", "firstName", "lastName", "avatar"],
+              attributes: ["id", "firstName", "username", "lastName", "avatar"],
             },
           ],
         },
@@ -227,6 +228,45 @@ class PostsService {
       });
     }
     return { post, relatedPosts };
+  }
+
+  async getCommentsByPostId(idOrSlug, commentsPage, commentsLimit) {
+    const page = parseInt(commentsPage) || 1;
+    const limit = parseInt(commentsLimit) || 10;
+    const offset = (page - 1) * limit;
+    const post = await Post.findOne({
+      where: {
+        [Op.or]: [{ id: idOrSlug }, { slug: idOrSlug }],
+      },
+      attributes: ["id"],
+    });
+    const { rows, count } = await Comment.findAndCountAll({
+      limit,
+      offset,
+      subQuery: false,
+      where: {
+        [Op.and]: [{ commentableType: "Post" }, { commentableId: post.id }],
+      },
+      attributes: [
+        "id",
+        "parentId",
+        "content",
+        "likesCount",
+        "createdAt",
+        "updatedAt",
+      ],
+      order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: User,
+          as: "commenter",
+          attributes: ["id", "firstName", "username", "lastName", "avatar"],
+          subQuery: false,
+        },
+      ],
+    });
+
+    return { rows, count };
   }
 
   async create(data) {

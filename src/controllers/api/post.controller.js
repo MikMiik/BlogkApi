@@ -19,6 +19,16 @@ exports.getOne = async (req, res) => {
   res.success(200, data);
 };
 
+exports.getComments = async (req, res) => {
+  const { commentsPage, limitComments } = req.query;
+  const data = await postService.getCommentsByPostId(
+    req.post.post.id,
+    commentsPage,
+    limitComments
+  );
+  res.success(200, data);
+};
+
 // exports.create = async (req, res) => {
 //   const post = await postService.create(req.body);
 //   res.success(201, post);
