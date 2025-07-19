@@ -15,8 +15,6 @@ module.exports = {
           model: "posts",
           key: "id",
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
       },
       url: Sequelize.STRING(255),
       altText: Sequelize.STRING(255),

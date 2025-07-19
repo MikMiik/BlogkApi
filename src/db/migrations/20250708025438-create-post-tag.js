@@ -15,8 +15,6 @@ module.exports = {
           model: "posts",
           key: "id",
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
       },
       tagId: {
         type: Sequelize.INTEGER,
@@ -24,8 +22,6 @@ module.exports = {
           model: "tags",
           key: "id",
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
       },
       createdAt: {
         type: Sequelize.DATE,

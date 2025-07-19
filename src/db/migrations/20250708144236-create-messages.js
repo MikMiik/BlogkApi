@@ -15,8 +15,6 @@ module.exports = {
           model: "users",
           key: "id",
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
       },
       conversationId: {
         type: Sequelize.INTEGER,
@@ -24,8 +22,6 @@ module.exports = {
           model: "conversations",
           key: "id",
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
       },
       type: {
         type: Sequelize.STRING(50),

@@ -15,8 +15,6 @@ module.exports = {
           model: "users",
           key: "id",
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
       },
       followerId: {
         type: Sequelize.INTEGER,
@@ -24,8 +22,6 @@ module.exports = {
           model: "users",
           key: "id",
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
       },
       createdAt: {
         type: Sequelize.DATE,

@@ -15,15 +15,16 @@ module.exports = {
           model: "users",
           key: "id",
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
       },
-      likeableType: Sequelize.STRING(50),
-      likeableId: Sequelize.INTEGER,
+      likableId: Sequelize.INTEGER,
+
+      likableType: Sequelize.STRING,
+
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,
       },
+
       updatedAt: {
         type: Sequelize.DATE,
         allowNull: false,

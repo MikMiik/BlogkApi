@@ -15,8 +15,6 @@ module.exports = {
           model: "users",
           key: "id",
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
       },
       notificationId: {
         type: Sequelize.INTEGER,
@@ -24,8 +22,6 @@ module.exports = {
           model: "notifications",
           key: "id",
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
       },
       seenAt: Sequelize.DATE,
       createdAt: {

@@ -14,8 +14,6 @@ module.exports = {
           model: "posts",
           key: "id",
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
       },
       topicId: {
         type: Sequelize.INTEGER,
@@ -23,8 +21,6 @@ module.exports = {
           model: "topics",
           key: "id",
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
       },
       createdAt: {
         allowNull: false,

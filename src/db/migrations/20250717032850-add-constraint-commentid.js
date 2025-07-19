@@ -11,8 +11,6 @@ module.exports = {
         table: "comments",
         field: "id",
       },
-      onUpdate: "CASCADE",
-      onDelete: "CASCADE",
     });
   },
 

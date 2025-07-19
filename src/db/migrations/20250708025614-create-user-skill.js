@@ -14,8 +14,6 @@ module.exports = {
           model: "users",
           key: "id",
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
       },
       skillId: {
         type: Sequelize.INTEGER,
@@ -23,8 +21,6 @@ module.exports = {
           model: "skills",
           key: "id",
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
       },
       createdAt: {
         type: Sequelize.DATE,

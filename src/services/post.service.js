@@ -249,8 +249,6 @@ class PostsService {
     });
     const { rows, count } = await Comment.findAndCountAll({
       limit: limitComments,
-      // offset,
-      // subQuery: false,
       where: {
         [Op.and]: [{ commentableType: "Post" }, { commentableId: post.id }],
       },
