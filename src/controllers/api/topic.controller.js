@@ -8,8 +8,7 @@ exports.getList = async (req, res) => {
 };
 
 exports.getOne = async (req, res) => {
-  const data = {
-    ...req.topic.dataValues,
-  };
+  const { page, limit } = req.query;
+  const data = await topicService.getById(req.params.id, +page, +limit);
   res.success(200, data);
 };

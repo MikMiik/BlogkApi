@@ -230,10 +230,10 @@ class PostsService {
     return { post, relatedPosts };
   }
 
-  async getCommentsByPostId(idOrSlug, commentsPage, commentsLimit) {
-    const page = parseInt(commentsPage) || 1;
-    const limit = parseInt(commentsLimit) || 10;
-    const offset = (page - 1) * limit;
+  async getCommentsByPostId(idOrSlug, limitComments) {
+    // const page = parseInt(commentsPage) || 1;
+    // const limit = parseInt(commentsLimit) || 10;
+    // const offset = (page - 1) * limit;
     const post = await Post.findOne({
       where: {
         [Op.or]: [{ id: idOrSlug }, { slug: idOrSlug }],
@@ -241,9 +241,9 @@ class PostsService {
       attributes: ["id"],
     });
     const { rows, count } = await Comment.findAndCountAll({
-      limit,
-      offset,
-      subQuery: false,
+      limit: limitComments,
+      // offset,
+      // subQuery: false,
       where: {
         [Op.and]: [{ commentableType: "Post" }, { commentableId: post.id }],
       },
