@@ -1,4 +1,4 @@
-const { Post, Topic, Sequelize, User } = require("@/models");
+const { Post, Topic, User } = require("@/models");
 const { Op } = require("sequelize");
 const { fn, col, literal } = require("sequelize");
 class TopicsService {
@@ -54,29 +54,24 @@ class TopicsService {
 
   async getById(idOrSlug, page = 1, limit = 10) {
     const offset = (page - 1) * limit;
-    console.log(limit);
-    console.log(offset);
 
-    // Lấy thông tin topic mà KHÔNG có postsCount để tránh conflict
     const topic = await Topic.findOne({
       where: {
         [Op.or]: [{ id: idOrSlug }, { slug: idOrSlug }],
       },
-      // Bỏ attributes để tránh count conflict
     });
 
     if (!topic) {
       throw new Error("Topic not found");
     }
 
-    // Lấy posts với limit/offset và đếm riêng
     const { count, rows: posts } = await Post.findAndCountAll({
       include: [
         {
           model: Topic,
           as: "topics",
           where: {
-            id: topic.id, // Dùng topic.id thay vì idOrSlug
+            id: topic.id,
           },
           attributes: ["name"],
           through: { attributes: [] },
@@ -84,7 +79,14 @@ class TopicsService {
         {
           model: User,
           as: "author",
-          attributes: ["id", "firstName", "lastName", "avatar", "socials"],
+          attributes: [
+            "id",
+            "firstName",
+            "lastName",
+            "avatar",
+            "socials",
+            "name",
+          ],
         },
       ],
       attributes: [
@@ -104,7 +106,7 @@ class TopicsService {
       order: [["publishedAt", "DESC"]],
       limit,
       offset,
-      distinct: true, // Quan trọng: tránh duplicate count do include
+      distinct: true, // tránh duplicate count do include
     });
 
     return { topic, posts, count };

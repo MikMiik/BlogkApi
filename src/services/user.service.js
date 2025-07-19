@@ -1,4 +1,5 @@
-const { User } = require("@/models");
+const { User, Skill, Achievement } = require("@/models");
+const { Op } = require("sequelize");
 class UsersService {
   async getAll() {
     const users = await User.findAll();
@@ -7,19 +8,19 @@ class UsersService {
 
   async getById(id) {
     const user = await User.findOne({
-      where: { id },
+      where: {
+        [Op.or]: [{ id }, { username: id }],
+      },
       attributes: [
         "id",
         "email",
         "firstName",
         "lastName",
         "username",
-        "address",
+        "name",
         "avatar",
-        "introduction",
         "role",
         "status",
-        "verifiedAt",
       ],
     });
     return user;

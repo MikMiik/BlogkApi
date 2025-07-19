@@ -26,7 +26,14 @@ class PostsService {
         {
           model: User,
           as: "author",
-          attributes: ["id", "firstName", "lastName", "avatar", "socials"],
+          attributes: [
+            "id",
+            "firstName",
+            "lastName",
+            "avatar",
+            "socials",
+            "name",
+          ],
         },
         {
           model: Topic,
@@ -58,7 +65,7 @@ class PostsService {
         {
           model: User,
           as: "author",
-          attributes: ["id", "firstName", "lastName", "avatar"],
+          attributes: ["id", "firstName", "lastName", "avatar", "name"],
         },
         {
           model: Topic,
@@ -89,7 +96,7 @@ class PostsService {
         {
           model: User,
           as: "author",
-          attributes: ["id", "firstName", "lastName", "avatar"],
+          attributes: ["id", "firstName", "lastName", "avatar", "name"],
         },
         {
           model: Topic,
@@ -260,7 +267,14 @@ class PostsService {
         {
           model: User,
           as: "commenter",
-          attributes: ["id", "firstName", "username", "lastName", "avatar"],
+          attributes: [
+            "id",
+            "firstName",
+            "username",
+            "lastName",
+            "avatar",
+            "name",
+          ],
           subQuery: false,
         },
       ],

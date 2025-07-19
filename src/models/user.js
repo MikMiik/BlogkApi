@@ -4,7 +4,21 @@ const { default: slugify } = require("slugify");
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      // define association here
+      User.hasMany(models.Post, {
+        as: "posts",
+      });
+      User.belongsToMany(models.Achievement, {
+        through: "achievement_user",
+        foreignKey: "userId",
+        otherKey: "achievementId",
+        as: "achievements",
+      });
+      User.belongsToMany(models.Skill, {
+        through: "user_skill",
+        foreignKey: "userId",
+        otherKey: "skillId",
+        as: "skills",
+      });
     }
   }
   User.init(
@@ -20,13 +34,38 @@ module.exports = (sequelize, DataTypes) => {
 
       lastName: DataTypes.STRING(191),
 
+      name: {
+        type: DataTypes.VIRTUAL,
+        get() {
+          return `${this.getDataValue("firstName")} ${this.getDataValue("lastName")}`;
+        },
+      },
+
       username: { type: DataTypes.STRING(191), unique: true },
+
+      birthday: DataTypes.DATE,
+
+      twoFactorAuth: DataTypes.BOOLEAN,
+
+      twoFactorSecret: DataTypes.STRING(50),
+
+      avatar: DataTypes.STRING(255),
+
+      coverImage: DataTypes.STRING(255),
 
       phone: { type: DataTypes.STRING(191), unique: true },
 
       role: { type: DataTypes.STRING(191), defaultValue: "User" },
 
       socials: DataTypes.JSON,
+
+      postsCount: DataTypes.INTEGER,
+
+      followersCount: DataTypes.INTEGER,
+
+      followingCount: DataTypes.INTEGER,
+
+      likesCount: DataTypes.INTEGER,
 
       status: DataTypes.STRING(191),
 
