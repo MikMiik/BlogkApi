@@ -1,4 +1,13 @@
-const { Post, User, Comment, Topic, Image, Tag, Like } = require("@/models");
+const {
+  Post,
+  User,
+  Comment,
+  Topic,
+  Image,
+  Tag,
+  Like,
+  Bookmark,
+} = require("@/models");
 const { Op, where } = require("sequelize");
 class PostsService {
   async getAll(page = 1, limit = 10, userId) {
@@ -286,6 +295,21 @@ class PostsService {
 
     await like.destroy();
     return { message: "Post unliked" };
+  }
+
+  async bookmarkPost({ postId, userId }) {
+    await Bookmark.create({ postId, userId });
+    return { message: "Post bookmarked" };
+  }
+
+  async unBookmarkPost({ postId, userId }) {
+    const bookmark = await Bookmark.findOne({
+      where: { postId, userId },
+    });
+    if (!bookmark) return { message: "Bookmark not found" };
+
+    await bookmark.destroy();
+    return { message: "Post unBookmarked" };
   }
 
   async remove(id) {

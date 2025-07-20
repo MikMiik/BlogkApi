@@ -7,9 +7,11 @@ const attachResourceLoaders = require("@/utils/attachResourceLoaders");
 attachResourceLoaders(router, ["post"]);
 // Posts
 router.get("/", postController.getList);
-router.get("/:post", postController.getOne);
 router.post("/:post/like", postController.likeOne);
 router.delete("/:post/unlike", postController.unlikeOne);
+router.post("/:post/bookmark", postController.bookmarkOne);
+router.delete("/:post/unbookmark", postController.unBookmarkOne);
+router.get("/:post", postController.getOne);
 // router.post("/", postsValidator.createPostValidator, postsController.create);
 // router.put(
 //   "/:post",

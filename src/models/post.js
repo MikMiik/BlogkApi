@@ -73,6 +73,16 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
 
+      isBookmarked: {
+        type: DataTypes.VIRTUAL,
+        get() {
+          return this.getDataValue("isBookmarked");
+        },
+        set(value) {
+          this.setDataValue("isBookmarked", value);
+        },
+      },
+
       metaTitle: DataTypes.STRING(255),
 
       metaDescription: DataTypes.TEXT,
@@ -175,6 +185,49 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       result.setDataValue("isLiked", !!like);
+    }
+  });
+
+  Post.addHook("afterFind", async (result, options) => {
+    const userId = options.userId;
+    const { Bookmark } = sequelize.models;
+
+    if (!userId) {
+      if (Array.isArray(result)) {
+        result.forEach((post) => {
+          post.setDataValue("isBookmarked", false);
+        });
+      } else if (result && result.id) {
+        result.setDataValue("isBookmarked", false);
+      }
+      return;
+    }
+
+    // Có userId → xử lý như thường
+    if (Array.isArray(result)) {
+      const postIds = result.map((post) => post.id);
+
+      const bookmarks = await Bookmark.findAll({
+        where: {
+          userId,
+          postId: postIds,
+        },
+      });
+
+      const bookmarkedIds = new Set(bookmarks.map((b) => b.postId));
+
+      result.forEach((post) => {
+        post.setDataValue("isBookmarked", bookmarkedIds.has(post.id));
+      });
+    } else if (result && result.id) {
+      const bookmark = await Bookmark.findOne({
+        where: {
+          userId,
+          postId: result.id,
+        },
+      });
+
+      result.setDataValue("isBookmarked", !!bookmark);
     }
   });
 

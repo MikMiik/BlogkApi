@@ -21,9 +21,25 @@ exports.likeOne = async (req, res) => {
   const data = await postService.likePost({ postId, userId: req.user.id });
   res.success(200, data);
 };
+
 exports.unlikeOne = async (req, res) => {
   const { postId } = req.body;
   const data = await postService.unlikePost({ postId, userId: req.user.id });
+  res.success(200, data);
+};
+
+exports.bookmarkOne = async (req, res) => {
+  const { postId } = req.body;
+  const data = await postService.bookmarkPost({ postId, userId: req.user.id });
+  res.success(200, data);
+};
+
+exports.unBookmarkOne = async (req, res) => {
+  const { postId } = req.body;
+  const data = await postService.unBookmarkPost({
+    postId,
+    userId: req.user.id,
+  });
   res.success(200, data);
 };
 
