@@ -6,7 +6,7 @@ exports.getList = async (req, res) => {
   let limit = +req.query.limit > 0 ? +req.query.limit : 10;
   let maxLimit = 20;
   if (limit > maxLimit) limit = maxLimit;
-  const result = await postService.getAll(page, limit);
+  const result = await postService.getAll(page, limit, req.user?.id);
   const { rows, count, featuredPosts, latestPosts } = result;
   const total = count;
   const items = { rows, featuredPosts, latestPosts };
@@ -16,6 +16,15 @@ exports.getList = async (req, res) => {
 
 exports.getOne = async (req, res) => {
   const data = req.post;
+  res.success(200, data);
+};
+
+exports.likeOne = async (req, res) => {
+  const data = await postService.likePost(req.body);
+  res.success(200, data);
+};
+exports.unlikeOne = async (req, res) => {
+  const data = await postService.unlikePost(req.body);
   res.success(200, data);
 };
 

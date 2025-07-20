@@ -27,6 +27,14 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: "tagId",
         as: "tags",
       });
+      Post.hasMany(models.Like, {
+        foreignKey: "likableId",
+        constraints: false,
+        scope: {
+          likableType: "Post",
+        },
+        as: "likes",
+      });
     }
   }
   Post.init(
@@ -53,6 +61,16 @@ module.exports = (sequelize, DataTypes) => {
       status: {
         type: DataTypes.STRING(50),
         defaultValue: "Draft",
+      },
+
+      isLiked: {
+        type: DataTypes.VIRTUAL,
+        get() {
+          return this.getDataValue("isLiked");
+        },
+        set(value) {
+          this.setDataValue("isLiked", value);
+        },
       },
 
       metaTitle: DataTypes.STRING(255),
@@ -113,5 +131,52 @@ module.exports = (sequelize, DataTypes) => {
       },
     }
   );
+
+  Post.addHook("afterFind", async (result, options) => {
+    const userId = options.userId;
+    const { Like } = sequelize.models;
+
+    // Nếu không có userId → set tất cả isLiked = false
+    if (!userId) {
+      if (Array.isArray(result)) {
+        result.forEach((post) => {
+          post.setDataValue("isLiked", false);
+        });
+      } else if (result && result.id) {
+        result.setDataValue("isLiked", false);
+      }
+      return;
+    }
+
+    // Có userId → xử lý như thường
+    if (Array.isArray(result)) {
+      const postIds = result.map((post) => post.id);
+
+      const likes = await Like.findAll({
+        where: {
+          userId,
+          likableType: "Post",
+          likableId: postIds,
+        },
+      });
+
+      const likedIds = new Set(likes.map((l) => l.likableId));
+
+      result.forEach((post) => {
+        post.setDataValue("isLiked", likedIds.has(post.id));
+      });
+    } else if (result && result.id) {
+      const like = await Like.findOne({
+        where: {
+          userId,
+          likableType: "Post",
+          likableId: result.id,
+        },
+      });
+
+      result.setDataValue("isLiked", !!like);
+    }
+  });
+
   return Post;
 };

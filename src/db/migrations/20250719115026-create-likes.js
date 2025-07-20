@@ -18,7 +18,7 @@ module.exports = {
       },
       likableId: Sequelize.INTEGER,
 
-      likableType: Sequelize.STRING,
+      likableType: Sequelize.STRING(255),
 
       createdAt: {
         type: Sequelize.DATE,

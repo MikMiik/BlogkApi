@@ -1,10 +1,11 @@
-const { Post, User, Comment, Topic, Image, Tag } = require("@/models");
+const { Post, User, Comment, Topic, Image, Tag, Like } = require("@/models");
 const { Op } = require("sequelize");
 class PostsService {
-  async getAll(page = 1, limit = 10) {
+  async getAll(page = 1, limit = 10, userId) {
     const offset = (page - 1) * limit;
 
     const { rows, count } = await Post.findAndCountAll({
+      userId,
       limit,
       offset,
       order: [["createdAt", "DESC"]],
@@ -47,6 +48,7 @@ class PostsService {
     const featuredPosts = await Post.findAll({
       order: [["viewsCount", "DESC"]],
       limit: 10,
+      userId,
       attributes: [
         "id",
         "title",
@@ -79,6 +81,7 @@ class PostsService {
     const latestPosts = await Post.findAll({
       order: [["publishedAt", "DESC"]],
       limit: 10,
+      userId,
       attributes: [
         "id",
         "title",
@@ -106,6 +109,7 @@ class PostsService {
         },
       ],
     });
+
     return {
       rows,
       count,
@@ -114,8 +118,9 @@ class PostsService {
     };
   }
 
-  async getById(idOrSlug) {
+  async getById(idOrSlug, userId) {
     const post = await Post.findOne({
+      userId,
       where: {
         [Op.or]: [{ id: idOrSlug }, { slug: idOrSlug }],
       },
@@ -193,6 +198,7 @@ class PostsService {
     if (post && post.topics && post.topics.length > 0) {
       const topicNames = post.topics.map((topic) => topic.name);
       relatedPosts = await Post.findAll({
+        userId,
         attributes: [
           "id",
           "title",
@@ -234,13 +240,11 @@ class PostsService {
         distinct: true,
       });
     }
+
     return { post, relatedPosts };
   }
 
   async getCommentsByPostId(idOrSlug, limitComments) {
-    // const page = parseInt(commentsPage) || 1;
-    // const limit = parseInt(commentsLimit) || 10;
-    // const offset = (page - 1) * limit;
     const post = await Post.findOne({
       where: {
         [Op.or]: [{ id: idOrSlug }, { slug: idOrSlug }],
@@ -293,6 +297,19 @@ class PostsService {
       },
     });
     return { postId: idOrSlug };
+  }
+
+  async likePost(data) {
+    await Like.create(data);
+    return { message: "Post liked" };
+  }
+
+  async unlikePost(data) {
+    const like = await Like.findOne({ where: data });
+    if (!like) return { message: "Like not found" };
+
+    await like.destroy();
+    return { message: "Post unliked" };
   }
 
   async remove(id) {

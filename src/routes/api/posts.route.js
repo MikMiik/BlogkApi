@@ -9,6 +9,8 @@ attachResourceLoaders(router, ["post"]);
 router.get("/", postsController.getList);
 router.get("/:post/comments", postsController.getComments);
 router.get("/:post", postsController.getOne);
+router.post("/:post/like", postsController.likeOne);
+router.delete("/:post/unlike", postsController.unlikeOne);
 // router.post("/", postsValidator.createPostValidator, postsController.create);
 // router.put(
 //   "/:post",
