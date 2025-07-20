@@ -1,10 +1,10 @@
 const { Post, User, Comment, Topic, Image, Tag, Like } = require("@/models");
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 class PostsService {
   async getAll(page = 1, limit = 10, userId) {
     const offset = (page - 1) * limit;
 
-    const { rows, count } = await Post.findAndCountAll({
+    const { rows: posts, count } = await Post.findAndCountAll({
       userId,
       limit,
       offset,
@@ -111,7 +111,7 @@ class PostsService {
     });
 
     return {
-      rows,
+      posts,
       count,
       featuredPosts,
       latestPosts,
@@ -160,30 +160,11 @@ class PostsService {
             "socials",
             "avatar",
             "username",
+            "name",
             "introduction",
             "postsCount",
             "followersCount",
             "followingCount",
-          ],
-        },
-        {
-          model: Comment,
-          as: "comments",
-          attributes: [
-            "id",
-            "parentId",
-            "content",
-            "likesCount",
-            "createdAt",
-            "updatedAt",
-          ],
-          order: [["createdAt", "DESC"]],
-          include: [
-            {
-              model: User,
-              as: "commenter",
-              attributes: ["id", "firstName", "username", "lastName", "avatar"],
-            },
           ],
         },
         {
@@ -193,6 +174,39 @@ class PostsService {
         },
       ],
     });
+
+    const { rows: comments, count: commentsCount } =
+      await Comment.findAndCountAll({
+        userId,
+        where: {
+          commentableId: post.id,
+          commentableType: "Post",
+        },
+        attributes: [
+          "id",
+          "parentId",
+          "content",
+          "isEdited",
+          "likesCount",
+          "createdAt",
+          "updatedAt",
+        ],
+        order: [["createdAt", "DESC"]],
+        include: [
+          {
+            model: User,
+            as: "commenter",
+            attributes: [
+              "id",
+              "firstName",
+              "username",
+              "lastName",
+              "avatar",
+              "name",
+            ],
+          },
+        ],
+      });
 
     let relatedPosts = [];
     if (post && post.topics && post.topics.length > 0) {
@@ -211,6 +225,7 @@ class PostsService {
           "viewsCount",
           "likesCount",
           "publishedAt",
+          "viewsCount",
         ],
         include: [
           {
@@ -227,7 +242,7 @@ class PostsService {
           {
             model: User,
             as: "author",
-            attributes: ["id", "firstName", "lastName", "avatar"],
+            attributes: ["id", "firstName", "lastName", "avatar", "name"],
           },
         ],
         where: {
@@ -241,48 +256,7 @@ class PostsService {
       });
     }
 
-    return { post, relatedPosts };
-  }
-
-  async getCommentsByPostId(idOrSlug, limitComments) {
-    const post = await Post.findOne({
-      where: {
-        [Op.or]: [{ id: idOrSlug }, { slug: idOrSlug }],
-      },
-      attributes: ["id"],
-    });
-    const { rows, count } = await Comment.findAndCountAll({
-      limit: limitComments,
-      where: {
-        [Op.and]: [{ commentableType: "Post" }, { commentableId: post.id }],
-      },
-      attributes: [
-        "id",
-        "parentId",
-        "content",
-        "likesCount",
-        "createdAt",
-        "updatedAt",
-      ],
-      order: [["createdAt", "DESC"]],
-      include: [
-        {
-          model: User,
-          as: "commenter",
-          attributes: [
-            "id",
-            "firstName",
-            "username",
-            "lastName",
-            "avatar",
-            "name",
-          ],
-          subQuery: false,
-        },
-      ],
-    });
-
-    return { rows, count };
+    return { post, relatedPosts, comments, commentsCount };
   }
 
   async create(data) {
@@ -299,13 +273,15 @@ class PostsService {
     return { postId: idOrSlug };
   }
 
-  async likePost(data) {
-    await Like.create(data);
+  async likePost({ postId, userId }) {
+    await Like.create({ userId, likableId: postId, likableType: "Post" });
     return { message: "Post liked" };
   }
 
-  async unlikePost(data) {
-    const like = await Like.findOne({ where: data });
+  async unlikePost({ postId, userId }) {
+    const like = await Like.findOne({
+      where: { userId, likableId: postId, likableType: "Post" },
+    });
     if (!like) return { message: "Like not found" };
 
     await like.destroy();

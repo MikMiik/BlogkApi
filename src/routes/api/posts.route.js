@@ -1,16 +1,15 @@
 const express = require("express");
 const router = express.Router();
 
-const postsController = require("@/controllers/api/post.controller");
+const postController = require("@/controllers/api/post.controller");
 const attachResourceLoaders = require("@/utils/attachResourceLoaders");
 
 attachResourceLoaders(router, ["post"]);
 // Posts
-router.get("/", postsController.getList);
-router.get("/:post/comments", postsController.getComments);
-router.get("/:post", postsController.getOne);
-router.post("/:post/like", postsController.likeOne);
-router.delete("/:post/unlike", postsController.unlikeOne);
+router.get("/", postController.getList);
+router.get("/:post", postController.getOne);
+router.post("/:post/like", postController.likeOne);
+router.delete("/:post/unlike", postController.unlikeOne);
 // router.post("/", postsValidator.createPostValidator, postsController.create);
 // router.put(
 //   "/:post",

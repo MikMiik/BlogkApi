@@ -34,12 +34,26 @@ module.exports = (sequelize, DataTypes) => {
         where: { id: like.likableId },
       });
     }
+    if (like.likableType === "Comment") {
+      const { Comment } = sequelize.models;
+      await Comment.increment("likesCount", {
+        by: 1,
+        where: { id: like.likableId },
+      });
+    }
   });
 
   Like.addHook("afterDestroy", async (like, options) => {
     if (like.likableType === "Post") {
       const { Post } = sequelize.models;
       await Post.decrement("likesCount", {
+        by: 1,
+        where: { id: like.likableId },
+      });
+    }
+    if (like.likableType === "Comment") {
+      const { Comment } = sequelize.models;
+      await Comment.decrement("likesCount", {
         by: 1,
         where: { id: like.likableId },
       });

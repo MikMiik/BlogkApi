@@ -6,12 +6,9 @@ exports.getList = async (req, res) => {
   let limit = +req.query.limit > 0 ? +req.query.limit : 10;
   let maxLimit = 20;
   if (limit > maxLimit) limit = maxLimit;
-  const result = await postService.getAll(page, limit, req.user?.id);
-  const { rows, count, featuredPosts, latestPosts } = result;
-  const total = count;
-  const items = { rows, featuredPosts, latestPosts };
-  if (!result) throw404();
-  res.paginate({ items, total });
+  const data = await postService.getAll(page, limit, req.user?.id);
+  if (!data) throw404();
+  res.success(200, data);
 };
 
 exports.getOne = async (req, res) => {
@@ -20,20 +17,13 @@ exports.getOne = async (req, res) => {
 };
 
 exports.likeOne = async (req, res) => {
-  const data = await postService.likePost(req.body);
+  const { postId } = req.body;
+  const data = await postService.likePost({ postId, userId: req.user.id });
   res.success(200, data);
 };
 exports.unlikeOne = async (req, res) => {
-  const data = await postService.unlikePost(req.body);
-  res.success(200, data);
-};
-
-exports.getComments = async (req, res) => {
-  const { limitComments } = req.query;
-  const data = await postService.getCommentsByPostId(
-    req.post.post.id,
-    +limitComments
-  );
+  const { postId } = req.body;
+  const data = await postService.unlikePost({ postId, userId: req.user.id });
   res.success(200, data);
 };
 
