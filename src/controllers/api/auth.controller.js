@@ -74,7 +74,6 @@ exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.query;
     const { userId } = verifyMailToken(token);
-    console.log(userId);
     await usersService.update(userId, {
       verifiedAt: new Date(),
     });
@@ -98,11 +97,10 @@ exports.verifyResetToken = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     const { token } = req.query;
-    console.log(token);
     const { userId } = verifyMailToken(token);
     const password = await hashPassword(req.body.password);
     const result = await usersService.update(userId, { password });
-    res.success(200, result);
+    res.success(200, { message: "Reset password successfully" });
   } catch (error) {
     res.error(401, error.message);
   }

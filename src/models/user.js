@@ -1,6 +1,7 @@
 "use strict";
 const { Model } = require("sequelize");
 const { default: slugify } = require("slugify");
+const baseURL = process.env.BASE_URL || "http://localhost:3000";
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
@@ -13,12 +14,8 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: "achievementId",
         as: "achievements",
       });
-      User.belongsToMany(models.Skill, {
-        through: "user_skill",
-        foreignKey: "userId",
-        otherKey: "skillId",
-        as: "skills",
-      });
+
+      User.hasOne(models.Privacy, { foreignKey: "userId", as: "privacy" });
     }
   }
   User.init(
@@ -45,6 +42,10 @@ module.exports = (sequelize, DataTypes) => {
 
       birthday: DataTypes.DATE,
 
+      introduction: DataTypes.STRING(255),
+
+      website: DataTypes.STRING(255),
+
       twoFactorAuth: DataTypes.BOOLEAN,
 
       twoFactorSecret: DataTypes.STRING(50),
@@ -52,6 +53,8 @@ module.exports = (sequelize, DataTypes) => {
       avatar: DataTypes.STRING(255),
 
       coverImage: DataTypes.STRING(255),
+
+      skills: DataTypes.JSON,
 
       phone: { type: DataTypes.STRING(191), unique: true },
 
@@ -119,5 +122,23 @@ module.exports = (sequelize, DataTypes) => {
       },
     }
   );
+
+  User.addHook("afterFind", (result) => {
+    const patchUser = (user) => {
+      if (user.avatar && !user.avatar.startsWith("http")) {
+        user.avatar = `${baseURL}/${user.avatar}`;
+      }
+
+      if (user.coverImage && !user.coverImage.startsWith("http")) {
+        user.coverImage = `${baseURL}/${user.coverImage}`;
+      }
+    };
+
+    if (Array.isArray(result)) {
+      result.forEach(patchUser);
+    } else if (result) {
+      patchUser(result);
+    }
+  });
   return User;
 };

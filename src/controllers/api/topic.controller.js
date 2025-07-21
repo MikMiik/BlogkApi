@@ -9,6 +9,11 @@ exports.getList = async (req, res) => {
 
 exports.getOne = async (req, res) => {
   const { page, limit } = req.query;
-  const data = await topicService.getById(req.params.id, +page, +limit);
+  const data = await topicService.getById({
+    idOrSlug: req.params.id,
+    page: +page,
+    limit: +limit,
+    userId: req.user.id,
+  });
   res.success(200, data);
 };

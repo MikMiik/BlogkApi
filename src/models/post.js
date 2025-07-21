@@ -1,5 +1,5 @@
 "use strict";
-const { Model } = require("sequelize");
+const { Model, Op } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Post extends Model {
     static associate(models) {
@@ -146,9 +146,12 @@ module.exports = (sequelize, DataTypes) => {
     const userId = options.userId;
     const { Like } = sequelize.models;
 
-    // Nếu không có userId → set tất cả isLiked = false
     if (!userId) {
-      if (Array.isArray(result)) {
+      if (result && result.posts && Array.isArray(result.posts)) {
+        result.posts.forEach((post) => {
+          post.setDataValue("isLiked", false);
+        });
+      } else if (Array.isArray(result)) {
         result.forEach((post) => {
           post.setDataValue("isLiked", false);
         });
@@ -159,8 +162,8 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     // Có userId → xử lý như thường
-    if (Array.isArray(result)) {
-      const postIds = result.map((post) => post.id);
+    if (result && result.posts && Array.isArray(result.posts)) {
+      const postIds = result.posts.map((post) => post.id);
 
       const likes = await Like.findAll({
         where: {
@@ -170,6 +173,21 @@ module.exports = (sequelize, DataTypes) => {
         },
       });
 
+      const likedIds = new Set(likes.map((l) => l.likableId));
+
+      result.posts.forEach((post) => {
+        post.setDataValue("isLiked", likedIds.has(post.id));
+      });
+    } else if (Array.isArray(result)) {
+      const postIds = result.map((post) => post.id);
+
+      const likes = await Like.findAll({
+        where: {
+          userId,
+          likableType: "Post",
+          likableId: postIds,
+        },
+      });
       const likedIds = new Set(likes.map((l) => l.likableId));
 
       result.forEach((post) => {

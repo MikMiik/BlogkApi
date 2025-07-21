@@ -1,4 +1,4 @@
-const { User, Skill, Achievement } = require("@/models");
+const { User } = require("@/models");
 const { Op } = require("sequelize");
 class UsersService {
   async getAll() {
@@ -38,8 +38,8 @@ class UsersService {
   }
 
   async update(id, data) {
-    await User.update(data, { where: { id } });
-    return { message: "Reset password successful" };
+    const result = await User.update(data, { where: { id } });
+    return result;
   }
 
   async remove(id) {

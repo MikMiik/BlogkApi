@@ -52,7 +52,7 @@ class TopicsService {
     return { topics, trendingTopics };
   }
 
-  async getById(idOrSlug, page = 1, limit = 10) {
+  async getById({ idOrSlug, page = 1, limit = 10, userId }) {
     const offset = (page - 1) * limit;
 
     const topic = await Topic.findOne({
@@ -66,6 +66,7 @@ class TopicsService {
     }
 
     const { count, rows: posts } = await Post.findAndCountAll({
+      userId,
       include: [
         {
           model: Topic,
@@ -85,6 +86,7 @@ class TopicsService {
             "lastName",
             "avatar",
             "socials",
+            "website",
             "name",
           ],
         },
