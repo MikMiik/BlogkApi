@@ -1,5 +1,5 @@
 const { User, Achievement, Post, Topic, Privacy } = require("@/models");
-const { Op, where } = require("sequelize");
+const { Op } = require("sequelize");
 const userService = require("./user.service");
 
 class ProfileService {
@@ -48,7 +48,6 @@ class ProfileService {
       attributes: [
         "id",
         "title",
-        "description",
         "slug",
         "content",
         "excerpt",
@@ -128,8 +127,6 @@ class ProfileService {
 
   async editProfile({ userId, data, files }) {
     try {
-      console.log(files);
-
       if (files.avatar) {
         data.avatar = `/uploads/${files.avatar[0].filename}`;
       }

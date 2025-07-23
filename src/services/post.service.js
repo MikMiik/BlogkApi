@@ -21,7 +21,6 @@ class PostsService {
       attributes: [
         "id",
         "title",
-        "description",
         "slug",
         "content",
         "excerpt",
@@ -62,7 +61,6 @@ class PostsService {
       attributes: [
         "id",
         "title",
-        "description",
         "slug",
         "content",
         "excerpt",
@@ -95,7 +93,6 @@ class PostsService {
       attributes: [
         "id",
         "title",
-        "description",
         "slug",
         "content",
         "excerpt",
@@ -137,7 +134,6 @@ class PostsService {
       attributes: [
         "id",
         "title",
-        "description",
         "content",
         "thumbnail",
         "readTime",
@@ -227,7 +223,6 @@ class PostsService {
         attributes: [
           "id",
           "title",
-          "description",
           "slug",
           "content",
           "excerpt",
@@ -271,8 +266,8 @@ class PostsService {
   }
 
   async create(data) {
-    const post = await Post.create(data);
-    return post;
+    await Post.create(data);
+    return { message: "Create successfully" };
   }
 
   async update(idOrSlug, data) {

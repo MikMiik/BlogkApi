@@ -1,5 +1,7 @@
 "use strict";
 const { Model, Op } = require("sequelize");
+const { default: slugify } = require("slugify");
+const baseURL = process.env.BASE_URL || "http://localhost:3000";
 module.exports = (sequelize, DataTypes) => {
   class Post extends Model {
     static associate(models) {
@@ -42,8 +44,6 @@ module.exports = (sequelize, DataTypes) => {
       userId: { type: DataTypes.INTEGER },
 
       title: DataTypes.STRING(255),
-
-      description: DataTypes.TEXT,
 
       excerpt: DataTypes.TEXT,
 
@@ -92,13 +92,20 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: "Public",
       },
 
-      visibilityIcon: DataTypes.STRING(255),
+      allowComments: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+      },
 
-      allowComments: DataTypes.BOOLEAN,
+      viewsCount: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
 
-      viewsCount: DataTypes.INTEGER,
-
-      likesCount: DataTypes.INTEGER,
+      likesCount: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
 
       publishedAt: DataTypes.DATE,
 
@@ -246,6 +253,20 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       result.setDataValue("isBookmarked", !!bookmark);
+    }
+  });
+
+  Post.addHook("afterFind", (result) => {
+    const patchPostCoverImage = (post) => {
+      if (post.thumbnail && !post.thumbnail.startsWith("http")) {
+        post.thumbnail = `${baseURL}/${post.thumbnail}`;
+      }
+    };
+
+    if (Array.isArray(result)) {
+      result.forEach(patchPostCoverImage);
+    } else if (result) {
+      patchPostCoverImage(result);
     }
   });
 

@@ -94,7 +94,6 @@ class TopicsService {
       attributes: [
         "id",
         "title",
-        "description",
         "slug",
         "content",
         "excerpt",

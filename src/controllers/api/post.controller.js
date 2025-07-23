@@ -43,10 +43,23 @@ exports.unBookmarkOne = async (req, res) => {
   res.success(200, data);
 };
 
-// exports.create = async (req, res) => {
-//   const post = await postService.create(req.body);
-//   res.success(201, post);
-// };
+exports.create = async (req, res) => {
+  const { isScheduled, publishDate, ...body } = req.body;
+
+  if (isScheduled) {
+    body.publishedAt = publishDate;
+  }
+  if (body.publishedAt === "null" || isNaN(Date.parse(body.publishedAt))) {
+    delete body.publishedAt;
+  }
+
+  if (req.file) {
+    body.thumbnail = `/uploads/${req.file.filename}`;
+  }
+
+  const data = await postService.create({ ...body, userId: req.user.id });
+  res.success(201, data);
+};
 
 // exports.update = async (req, res) => {
 //   const post = await postService.update(req.post.id, req.body);
