@@ -9,6 +9,11 @@ module.exports = (sequelize, DataTypes) => {
         as: "posts",
       });
       User.belongsToMany(models.Achievement, {
+        through: "bookmarks",
+        foreignKey: "userId",
+        otherKey: "postId",
+      });
+      User.belongsToMany(models.Bookmark, {
         through: "achievement_user",
         foreignKey: "userId",
         otherKey: "achievementId",

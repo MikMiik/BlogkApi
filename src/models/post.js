@@ -31,6 +31,12 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: "tagId",
         as: "tags",
       });
+      Post.belongsToMany(models.Bookmark, {
+        through: "bookmarks",
+        foreignKey: "postId",
+        otherKey: "userId",
+        as: "bookmarksPosts",
+      });
       Post.hasMany(models.Like, {
         foreignKey: "likableId",
         constraints: false,

@@ -7,6 +7,7 @@ const handleUpload = require("@/middlewares/handleUpload");
 
 // Posts
 router.get("/", postController.getList);
+router.get("/bookmarks", postController.getBookmarkList);
 router.get("/my-posts", postController.getOwnList);
 router.post("/draft", postController.draft);
 router.get("/write/:id", postController.getToEdit);

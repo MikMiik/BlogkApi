@@ -308,6 +308,64 @@ class PostsService {
     return post;
   }
 
+  async getBookmarkPosts() {
+    const { id: userId } = getCurrentUser();
+    const bookmarks = await Bookmark.findAll({
+      where: {
+        userId,
+      },
+    });
+    const posts = await Post.findAll({
+      where: {
+        id: bookmarks.map((bookmark) => bookmark.postId),
+      },
+      attributes: [
+        "id",
+        "title",
+        "content",
+        "status",
+        "excerpt",
+        "visibility",
+        "thumbnail",
+        "readTime",
+        "metaTitle",
+        "metaDescription",
+        "viewsCount",
+        "likesCount",
+        "publishedAt",
+        "updatedAt",
+      ],
+      include: [
+        {
+          model: Topic,
+          as: "topics",
+          attributes: ["name"],
+          through: { attributes: [] },
+        },
+        {
+          model: Tag,
+          as: "tags",
+          attributes: ["name"],
+          through: { attributes: [] },
+        },
+        {
+          model: User,
+          as: "author",
+          attributes: [
+            "id",
+            "firstName",
+            "lastName",
+            "avatar",
+            "website",
+            "socials",
+            "name",
+          ],
+        },
+      ],
+    });
+    return posts;
+  }
+
   async getOwnPosts() {
     const { id: userId } = getCurrentUser();
     const { rows: posts, count } = await Post.unscoped().findAndCountAll({
@@ -344,7 +402,7 @@ class PostsService {
         {
           model: Topic,
           as: "topics",
-          attributes: ["name"],
+          attributes: ["name, id"],
           through: { attributes: [] },
         },
       ],

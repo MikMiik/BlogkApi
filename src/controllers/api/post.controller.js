@@ -2,7 +2,13 @@ const postService = require("@/services/post.service");
 
 exports.getList = async (req, res) => {
   const { limit, page } = req.query;
-  const data = await postService.getAll(+page, +limit, req.user?.id);
+  const data = await postService.getAll(+page, +limit);
+  res.success(200, data);
+};
+
+exports.getBookmarkList = async (req, res) => {
+  const { limit, page } = req.query;
+  const data = await postService.getBookmarkPosts(+page, +limit);
   res.success(200, data);
 };
 
