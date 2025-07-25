@@ -3,7 +3,7 @@ const session = createNamespace("my session");
 
 const setContext = (req, res, next) => {
   session.run(() => {
-    session.set("user", req.user); // giả sử đã xác thực
+    session.set("user", req.user);
     next();
   });
 };

@@ -303,5 +303,25 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
 
+  Post.addHook("afterCreate", async (post) => {
+    if (post) {
+      const { User } = sequelize.models;
+      await User.increment("postsCount", {
+        by: 1,
+        where: { id: post.userId },
+      });
+    }
+  });
+
+  Post.addHook("afterDestroy", async (post, options) => {
+    if (post) {
+      const { User } = sequelize.models;
+      await User.decrement("postsCount", {
+        by: 1,
+        where: { id: post.userId },
+      });
+    }
+  });
+
   return Post;
 };

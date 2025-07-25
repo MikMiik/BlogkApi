@@ -7,6 +7,7 @@ async function checkAuth(req, res, next) {
 
     const notAuthRequired =
       req.path === "/" || publicPaths.some((path) => req.path.startsWith(path));
+
     if (notAuthRequired) {
       return next();
     }
@@ -22,6 +23,7 @@ async function checkAuth(req, res, next) {
       }
       req.user = user;
     }
+
     next();
   } catch (error) {
     return res.error(401, error.message);

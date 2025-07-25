@@ -43,7 +43,10 @@ class UsersService {
   }
 
   async remove(id) {
-    const result = await User.destroy({ where: { id } });
+    const user = await User.findOne({
+      where: { [Op.or]: [{ id }, { username: id }] },
+    });
+    const result = await user.destroy();
     return result;
   }
 }

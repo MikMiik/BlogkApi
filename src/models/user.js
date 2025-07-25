@@ -1,4 +1,5 @@
 "use strict";
+const getCurrentUser = require("@/utils/getCurrentUser");
 const { Model } = require("sequelize");
 const { default: slugify } = require("slugify");
 const baseURL = process.env.BASE_URL || "http://localhost:3000";
@@ -13,11 +14,23 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "userId",
         otherKey: "postId",
       });
-      User.belongsToMany(models.Bookmark, {
+      User.belongsToMany(models.Achievement, {
         through: "achievement_user",
         foreignKey: "userId",
         otherKey: "achievementId",
         as: "achievements",
+      });
+      User.belongsToMany(models.User, {
+        through: "follows",
+        foreignKey: "followedId",
+        otherKey: "followerId",
+        as: "followings",
+      });
+      User.belongsToMany(models.User, {
+        through: "follows",
+        foreignKey: "followerId",
+        otherKey: "followedId",
+        as: "followers",
       });
 
       User.hasOne(models.Privacy, { foreignKey: "userId", as: "privacy" });
@@ -66,6 +79,16 @@ module.exports = (sequelize, DataTypes) => {
       role: { type: DataTypes.STRING(191), defaultValue: "User" },
 
       socials: DataTypes.JSON,
+
+      isFollowed: {
+        type: DataTypes.VIRTUAL,
+        get() {
+          return this.getDataValue("isFollowed");
+        },
+        set(value) {
+          this.setDataValue("isFollowed", value);
+        },
+      },
 
       postsCount: DataTypes.INTEGER,
 
@@ -143,6 +166,49 @@ module.exports = (sequelize, DataTypes) => {
       result.forEach(patchUser);
     } else if (result) {
       patchUser(result);
+    }
+  });
+
+  User.addHook("afterFind", async (result) => {
+    const user = getCurrentUser();
+    const userId = user?.id;
+    const { Follow } = sequelize.models;
+
+    if (!userId) {
+      if (Array.isArray(result)) {
+        result.forEach((post) => {
+          post.setDataValue("isFollowed", false);
+        });
+      } else if (result && result.id) {
+        result.setDataValue("isFollowed", false);
+      }
+      return;
+    }
+
+    if (Array.isArray(result)) {
+      const userIds = result.map((user) => user.id);
+
+      const followeds = await Follow.findAll({
+        where: {
+          followerId: userId,
+          followedId: userIds,
+        },
+      });
+
+      const followedIds = new Set(followeds.map((f) => f.followedId));
+
+      result.forEach((user) => {
+        user.setDataValue("isFollowed", followedIds.has(user.id));
+      });
+    } else if (result && result.id) {
+      const followed = await Follow.findOne({
+        where: {
+          followerId: userId,
+          followedId: result.id,
+        },
+      });
+
+      result.setDataValue("isFollowed", !!followed);
     }
   });
   return User;

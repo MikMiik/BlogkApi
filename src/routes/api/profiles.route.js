@@ -6,6 +6,8 @@ const handleUpload = require("@/middlewares/handleUpload");
 
 router.get("/:id/edit", profilesController.getOneToEdit);
 router.get("/:id", profilesController.getOne);
+router.post("/:username/follow", profilesController.follow);
+router.delete("/:username/unfollow", profilesController.unfollow);
 router.patch(
   "/:id/edit",
   handleUpload.fields([

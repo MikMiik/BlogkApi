@@ -9,7 +9,7 @@ module.exports = {
         autoIncrement: true,
         primaryKey: true,
       },
-      followingId: {
+      followedId: {
         type: Sequelize.INTEGER,
         references: {
           model: "users",

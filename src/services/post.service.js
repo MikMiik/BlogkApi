@@ -402,7 +402,7 @@ class PostsService {
         {
           model: Topic,
           as: "topics",
-          attributes: ["name, id"],
+          attributes: ["name", "id"],
           through: { attributes: [] },
         },
       ],
@@ -415,7 +415,7 @@ class PostsService {
 
   async create(data) {
     const post = await Post.create(data);
-    return { message: "Create successfully", postId: post.id };
+    return { message: "Create successfully", slug: post.slug };
   }
 
   async editPost(idOrSlug, data) {
@@ -424,7 +424,6 @@ class PostsService {
       if (isNaN(parsed)) throw new Error("readTime must be a valid number");
       data.readTime = parsed;
     }
-    console.log(data);
 
     await Post.update(data, {
       where: {
@@ -491,8 +490,11 @@ class PostsService {
     return res;
   }
 
-  async remove(id) {
-    const result = await Post.destroy({ where: { id } });
+  async remove(idOrSlug) {
+    const post = await Post.findOne({
+      where: { [Op.or]: [{ id: idOrSlug }, { slug: idOrSlug }] },
+    });
+    const result = await post.destroy();
     return result;
   }
 }

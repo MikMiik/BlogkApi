@@ -1,6 +1,7 @@
-const { User, Achievement, Post, Topic, Privacy } = require("@/models");
+const { User, Achievement, Post, Topic, Privacy, Follow } = require("@/models");
 const { Op } = require("sequelize");
 const userService = require("./user.service");
+const getCurrentUser = require("@/utils/getCurrentUser");
 
 class ProfileService {
   async getById({ id, page = 1, limit = 10, userId }) {
@@ -17,6 +18,7 @@ class ProfileService {
         "lastName",
         "username",
         "name",
+        "isFollowed",
         "skills",
         "address",
         "website",
@@ -42,9 +44,7 @@ class ProfileService {
       ],
     });
 
-    const { count, rows: posts } = await Post.scope(
-      "onlyPublished"
-    ).findAndCountAll({
+    const { count, rows: posts } = await Post.findAndCountAll({
       where: { userId: user.id },
       userId,
       attributes: [
@@ -153,6 +153,25 @@ class ProfileService {
 
       throw new Error("Update failed");
     }
+  }
+
+  async follow(username) {
+    const { id: userId } = getCurrentUser();
+    const user = await User.findOne({
+      where: { username },
+    });
+    await Follow.create({ followerId: userId, followedId: user.id });
+    return { message: "Followed" };
+  }
+
+  async unfollow(username) {
+    const { id: userId } = getCurrentUser();
+    const user = await User.findOne({ where: { username } });
+    const follow = await Follow.findOne({
+      where: { followerId: userId, followedId: user.id },
+    });
+    await follow.destroy();
+    return { message: "Unfollowed" };
   }
 }
 

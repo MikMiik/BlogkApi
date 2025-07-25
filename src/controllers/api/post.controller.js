@@ -54,11 +54,6 @@ exports.unBookmarkOne = async (req, res) => {
 };
 
 exports.draft = async (req, res) => {
-  const postId = req.body.postId;
-  if (postId) {
-    await postService.update(postId, req.body);
-    return res.success(201, { postId });
-  }
   const data = await postService.create({ ...req.body, userId: req.user.id });
   res.success(201, data);
 };
