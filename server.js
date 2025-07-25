@@ -26,6 +26,7 @@ const errorHandler = require("@/middlewares/errorHandler");
 const responseEnhancer = require("@/middlewares/responseEnhancer");
 const handlePagination = require("@/middlewares/handlePagination");
 const checkAuth = require("@/middlewares/checkAuth");
+const { setContext } = require("@/middlewares/setContext");
 
 /*------------------------------------------------------------ */
 
@@ -52,7 +53,7 @@ app.set("views", "./src/views");
 app.set("layout", "./layouts/default");
 
 // Router
-app.use("/api/v1", checkAuth, router);
+app.use("/api/v1", checkAuth, setContext, router);
 
 // ErrorHandle
 app.use(notFoundHandler);

@@ -1,7 +1,9 @@
 "use strict";
+const getCurrentUser = require("@/utils/getCurrentUser");
 const { Model, Op } = require("sequelize");
 const { default: slugify } = require("slugify");
 const baseURL = process.env.BASE_URL || "http://localhost:3000";
+
 module.exports = (sequelize, DataTypes) => {
   class Post extends Model {
     static associate(models) {
@@ -60,7 +62,7 @@ module.exports = (sequelize, DataTypes) => {
 
       status: {
         type: DataTypes.STRING(50),
-        defaultValue: "Draft",
+        defaultValue: "draft",
       },
 
       isLiked: {
@@ -89,7 +91,7 @@ module.exports = (sequelize, DataTypes) => {
 
       visibility: {
         type: DataTypes.STRING(50),
-        defaultValue: "Public",
+        defaultValue: "public",
       },
 
       allowComments: {
@@ -120,6 +122,16 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "Post",
       tableName: "posts",
       timestamps: true,
+      scopes: {
+        onlyPublished: {
+          where: {
+            publishedAt: {
+              [Op.lte]: sequelize.literal("CURRENT_TIMESTAMP"),
+            },
+            status: "published",
+          },
+        },
+      },
       hooks: {
         beforeCreate: async (post, options) => {
           if (post.title && !post.slug) {
@@ -149,8 +161,9 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  Post.addHook("afterFind", async (result, options) => {
-    const userId = options.userId;
+  Post.addHook("afterFind", async (result) => {
+    const { id: userId } = getCurrentUser();
+
     const { Like } = sequelize.models;
 
     if (!userId) {
@@ -213,8 +226,8 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
 
-  Post.addHook("afterFind", async (result, options) => {
-    const userId = options.userId;
+  Post.addHook("afterFind", async (result) => {
+    const { id: userId } = getCurrentUser();
     const { Bookmark } = sequelize.models;
 
     if (!userId) {
@@ -267,6 +280,20 @@ module.exports = (sequelize, DataTypes) => {
       result.forEach(patchPostCoverImage);
     } else if (result) {
       patchPostCoverImage(result);
+    }
+  });
+
+  Post.addHook("afterFind", (result) => {
+    const patchPostAuthorAvatar = (post) => {
+      if (post?.author?.avatar && !post?.author?.avatar.startsWith("http")) {
+        post.author.avatar = `${baseURL}/${post.author.avatar}`;
+      }
+    };
+
+    if (Array.isArray(result)) {
+      result.forEach(patchPostAuthorAvatar);
+    } else if (result) {
+      patchPostAuthorAvatar(result);
     }
   });
 

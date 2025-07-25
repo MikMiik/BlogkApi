@@ -8,7 +8,8 @@ exports.getList = async (req, res) => {
 };
 
 exports.getOne = async (req, res) => {
-  const data = req.user;
+  const { id } = req.params;
+  const data = await userService.getById(id);
   res.success(200, data);
 };
 

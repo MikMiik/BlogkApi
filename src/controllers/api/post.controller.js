@@ -1,72 +1,81 @@
 const postService = require("@/services/post.service");
-const throw404 = require("@/utils/throw404");
 
 exports.getList = async (req, res) => {
-  const page = +req.query.page > 0 ? +req.query.page : 1;
-  let limit = +req.query.limit > 0 ? +req.query.limit : 10;
-  let maxLimit = 20;
-  if (limit > maxLimit) limit = maxLimit;
-  const data = await postService.getAll(page, limit, req.user?.id);
-  if (!data) throw404();
+  const { limit, page } = req.query;
+  const data = await postService.getAll(+page, +limit, req.user?.id);
+  res.success(200, data);
+};
+
+exports.getOwnList = async (req, res) => {
+  const data = await postService.getOwnPosts();
   res.success(200, data);
 };
 
 exports.getOne = async (req, res) => {
-  const data = req.post;
+  const { id } = req.params;
+  const data = await postService.getById(id);
+  res.success(200, data);
+};
+
+exports.getToEdit = async (req, res) => {
+  const { id } = req.params;
+  const data = await postService.getPostToEdit(id);
   res.success(200, data);
 };
 
 exports.likeOne = async (req, res) => {
   const { postId } = req.body;
-  const data = await postService.likePost({ postId, userId: req.user.id });
+  const data = await postService.likePost(postId);
   res.success(200, data);
 };
 
 exports.unlikeOne = async (req, res) => {
   const { postId } = req.body;
-  const data = await postService.unlikePost({ postId, userId: req.user.id });
+  const data = await postService.unlikePost(postId);
   res.success(200, data);
 };
 
 exports.bookmarkOne = async (req, res) => {
   const { postId } = req.body;
-  const data = await postService.bookmarkPost({ postId, userId: req.user.id });
+  const data = await postService.bookmarkPost(postId);
   res.success(200, data);
 };
 
 exports.unBookmarkOne = async (req, res) => {
   const { postId } = req.body;
-  const data = await postService.unBookmarkPost({
-    postId,
-    userId: req.user.id,
-  });
+  const data = await postService.unBookmarkPost(postId);
   res.success(200, data);
 };
 
-exports.create = async (req, res) => {
-  const { isScheduled, publishDate, ...body } = req.body;
-
-  if (isScheduled) {
-    body.publishedAt = publishDate;
+exports.draft = async (req, res) => {
+  const postId = req.body.postId;
+  if (postId) {
+    await postService.update(postId, req.body);
+    return res.success(201, { postId });
   }
-  if (body.publishedAt === "null" || isNaN(Date.parse(body.publishedAt))) {
-    delete body.publishedAt;
-  }
-
-  if (req.file) {
-    body.thumbnail = `/uploads/${req.file.filename}`;
-  }
-
-  const data = await postService.create({ ...body, userId: req.user.id });
+  const data = await postService.create({ ...req.body, userId: req.user.id });
   res.success(201, data);
 };
 
-// exports.update = async (req, res) => {
-//   const post = await postService.update(req.post.id, req.body);
-//   res.success(200, post);
-// };
+exports.publish = async (req, res) => {
+  if (req.file) {
+    req.body.thumbnail = `/uploads/${req.file.filename}`;
+  }
+  const data = await postService.publishPost(req.body);
+  res.success(201, data);
+};
 
-// exports.remove = async (req, res) => {
-//   await postService.remove(req.post.id);
-//   res.success(204);
-// };
+exports.edit = async (req, res) => {
+  const { id } = req.params;
+  if (req.file) {
+    req.body.thumbnail = `/uploads/${req.file.filename}`;
+  }
+  const data = await postService.editPost(id, req.body);
+  res.success(200, data);
+};
+
+exports.remove = async (req, res) => {
+  const { id } = req.params;
+  await postService.remove(id);
+  res.success(204);
+};

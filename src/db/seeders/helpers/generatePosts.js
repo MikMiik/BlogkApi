@@ -36,7 +36,7 @@ async function generatePosts(count = 100, options = {}) {
       excerpt: getExcerptFromContent(content),
       readTime: faker.number.int({ min: 0, max: 10 }),
       thumbnail: `https://picsum.photos/seed/${i}/600/400`,
-      status: faker.helpers.arrayElement(["Published", "Draft"]),
+      status: faker.helpers.arrayElement(["published", "draft"]),
       metaTitle: faker.lorem.sentence(2),
       metaDescription: faker.lorem.sentence(3),
       visibility: faker.helpers.arrayElement([

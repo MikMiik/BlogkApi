@@ -1,6 +1,8 @@
-const { Topic, PostTopic } = require("@/models");
+const { Topic, Post_Topic } = require("@/models");
 
 async function handlePostTopic({ postId, topicNames }) {
+  if (!topicNames || topicNames?.length === 0) return;
+
   const uniqueNames = [...new Set(topicNames.map((name) => name.trim()))];
 
   const existingTopics = await Topic.findAll({
@@ -28,12 +30,13 @@ async function handlePostTopic({ postId, topicNames }) {
   const allTopicIds = [...existingIds, ...newIds];
 
   // Tạo các bản ghi trong bảng PostTopic
-  const postTopicEntries = allTopicIds.map((topicId) => ({
-    postId,
-    topicId,
-  }));
-
-  await PostTopic.bulkCreate(postTopicEntries);
+  allTopicIds.forEach(
+    async (topicId) =>
+      await Post_Topic.create({
+        postId,
+        topicId,
+      })
+  );
 }
 
 module.exports = handlePostTopic;

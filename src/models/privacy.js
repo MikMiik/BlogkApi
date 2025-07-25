@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       profileVisibility: {
         type: DataTypes.STRING(50),
-        defaultValue: "Public",
+        defaultValue: "public",
       },
       showEmail: {
         type: DataTypes.BOOLEAN,

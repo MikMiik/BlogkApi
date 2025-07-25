@@ -5,29 +5,31 @@ const postController = require("@/controllers/api/post.controller");
 const attachResourceLoaders = require("@/utils/attachResourceLoaders");
 const handleUpload = require("@/middlewares/handleUpload");
 
-attachResourceLoaders(router, ["post"]);
 // Posts
 router.get("/", postController.getList);
-router.post("/", handleUpload.single("coverImage"), postController.create);
-router.post("/:post/like", postController.likeOne);
-router.delete("/:post/unlike", postController.unlikeOne);
-router.post("/:post/bookmark", postController.bookmarkOne);
-router.delete("/:post/unbookmark", postController.unBookmarkOne);
-router.get("/:post", postController.getOne);
-// router.put(
-//   "/:post",
-//   postsValidator.updatePostValidator,
-//   postsController.update
-// );
-// router.patch(
-//   "/:post",
-//   postsValidator.updatePostValidator,
-//   postsController.update
-// );
-// router.delete("/:post", postsController.remove);
-
-// // Posts comments
-// router.get("/:post/comments", postsController.getPostComments);
-// router.post("/:post/comments", postsController.createPostComments);
+router.get("/my-posts", postController.getOwnList);
+router.post("/draft", postController.draft);
+router.get("/write/:id", postController.getToEdit);
+router.put(
+  "/write/:id",
+  handleUpload.single("coverImage"),
+  postController.edit
+);
+router.patch(
+  "/write/:id",
+  handleUpload.single("coverImage"),
+  postController.edit
+);
+router.post(
+  "/publish",
+  handleUpload.single("coverImage"),
+  postController.publish
+);
+router.post("/:id/like", postController.likeOne);
+router.delete("/:id/unlike", postController.unlikeOne);
+router.post("/:id/bookmark", postController.bookmarkOne);
+router.delete("/:id/unbookmark", postController.unBookmarkOne);
+router.get("/:id", postController.getOne);
+router.delete("/:id", postController.remove);
 
 module.exports = router;

@@ -27,13 +27,13 @@ module.exports = {
       thumbnail: Sequelize.STRING(255),
       status: {
         type: Sequelize.STRING(50),
-        defaultValue: "Draft",
+        defaultValue: "draft",
       },
       metaTitle: Sequelize.STRING(255),
       metaDescription: Sequelize.TEXT,
       visibility: {
         type: Sequelize.STRING(50),
-        defaultValue: "Public",
+        defaultValue: "public",
       },
       visibilityIcon: Sequelize.STRING(255),
       allowComments: Sequelize.BOOLEAN,

@@ -18,7 +18,7 @@ module.exports = {
       },
       profileVisibility: {
         type: Sequelize.STRING(50),
-        defaultValue: "Public",
+        defaultValue: "public",
       },
       showEmail: {
         type: Sequelize.BOOLEAN,

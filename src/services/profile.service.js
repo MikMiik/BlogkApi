@@ -42,13 +42,16 @@ class ProfileService {
       ],
     });
 
-    const { count, rows: posts } = await Post.findAndCountAll({
+    const { count, rows: posts } = await Post.scope(
+      "onlyPublished"
+    ).findAndCountAll({
       where: { userId: user.id },
       userId,
       attributes: [
         "id",
         "title",
         "slug",
+        "status",
         "content",
         "excerpt",
         "readTime",
