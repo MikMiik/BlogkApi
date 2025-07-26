@@ -6,6 +6,10 @@ module.exports = (sequelize, DataTypes) => {
       Conversation.hasMany(models.Message, {
         as: "messages",
       });
+      Conversation.hasMany(models.Message, {
+        as: "lastMessage",
+        foreignKey: "conversationId",
+      });
 
       Conversation.belongsToMany(models.User, {
         through: "conversation_participants",
@@ -25,14 +29,6 @@ module.exports = (sequelize, DataTypes) => {
 
       lastMessageAt: DataTypes.DATE,
 
-      lastMessage: {
-        type: DataTypes.VIRTUAL,
-        get() {
-          const messages = this.getDataValue("messages") || [];
-          return messages[messages.length - 1] || null;
-        },
-      },
-
       isOnline: {
         type: DataTypes.VIRTUAL,
         get() {
@@ -40,7 +36,8 @@ module.exports = (sequelize, DataTypes) => {
           const creatorId = this.getDataValue("creatorId");
 
           return participants.some(
-            (user) => user.id !== creatorId && user.status === "online"
+            (user) =>
+              user.id !== creatorId && user.status === ("Active" || "Online")
           );
         },
       },
@@ -58,5 +55,25 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
     }
   );
+
+  Conversation.addHook("afterFind", (result, options) => {
+    const handleConversation = (conv) => {
+      if (
+        conv &&
+        Array.isArray(conv.participants) &&
+        conv.participants.length === 1
+      ) {
+        conv.setDataValue("participant", conv.participants[0]);
+      }
+    };
+
+    if (Array.isArray(result)) {
+      result.forEach(handleConversation);
+    } else {
+      handleConversation(result);
+    }
+
+    return result;
+  });
   return Conversation;
 };

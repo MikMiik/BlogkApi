@@ -9,6 +9,9 @@ module.exports = (sequelize, DataTypes) => {
       User.hasMany(models.Post, {
         as: "posts",
       });
+      User.hasMany(models.Message, {
+        as: "messages",
+      });
       User.belongsToMany(models.Achievement, {
         through: "bookmarks",
         foreignKey: "userId",

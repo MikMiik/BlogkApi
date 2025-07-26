@@ -3,7 +3,7 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Message extends Model {
     static associate(models) {
-      // define association here
+      Message.belongsTo(models.User, { as: "author", foreignKey: "senderId" });
     }
   }
   Message.init(
