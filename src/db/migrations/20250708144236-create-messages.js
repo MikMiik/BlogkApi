@@ -9,7 +9,7 @@ module.exports = {
         autoIncrement: true,
         primaryKey: true,
       },
-      userId: {
+      senderId: {
         type: Sequelize.INTEGER,
         references: {
           model: "users",
@@ -28,6 +28,10 @@ module.exports = {
         defaultValue: "text",
       },
       content: Sequelize.TEXT,
+      status: {
+        type: Sequelize.STRING(50),
+        defaultValue: "sending",
+      },
       deletedAt: Sequelize.DATE,
       createdAt: {
         type: Sequelize.DATE,

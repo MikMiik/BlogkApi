@@ -12,6 +12,7 @@ module.exports = {
       name: Sequelize.STRING(50),
       avatar: Sequelize.STRING(255),
       type: Sequelize.STRING(50),
+
       lastMessageAt: Sequelize.DATE,
       createdAt: {
         type: Sequelize.DATE,

@@ -33,6 +33,13 @@ module.exports = (sequelize, DataTypes) => {
         as: "followers",
       });
 
+      User.belongsToMany(models.Conversation, {
+        through: "conversation_participants",
+        foreignKey: "userId",
+        otherKey: "conversationId",
+        as: "conversations",
+      });
+
       User.hasOne(models.Privacy, { foreignKey: "userId", as: "privacy" });
     }
   }

@@ -28,6 +28,7 @@ class UsersService {
   async getByEmail(email) {
     const user = await User.findOne({
       where: { email },
+      hooks: false,
     });
     return user;
   }
