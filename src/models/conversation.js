@@ -33,6 +33,18 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
 
+      isOnline: {
+        type: DataTypes.VIRTUAL,
+        get() {
+          const participants = this.getDataValue("participants") || [];
+          const creatorId = this.getDataValue("creatorId");
+
+          return participants.some(
+            (user) => user.id !== creatorId && user.status === "online"
+          );
+        },
+      },
+
       createdAt: DataTypes.DATE,
 
       deletedAt: DataTypes.DATE,
