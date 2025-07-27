@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
       content: DataTypes.TEXT,
       status: {
         type: DataTypes.STRING(50),
-        defaultValue: "sending",
+        defaultValue: "sent",
       },
       deletedAt: DataTypes.DATE,
 

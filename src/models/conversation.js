@@ -1,5 +1,7 @@
 "use strict";
 const { Model } = require("sequelize");
+const baseURL = process.env.BASE_URL || "http://localhost:3000";
+
 module.exports = (sequelize, DataTypes) => {
   class Conversation extends Model {
     static associate(models) {
@@ -63,6 +65,12 @@ module.exports = (sequelize, DataTypes) => {
         Array.isArray(conv.participants) &&
         conv.participants.length === 1
       ) {
+        if (
+          conv?.participants[0]?.avatar &&
+          !conv?.participants[0]?.avatar.startsWith("http")
+        ) {
+          conv.participants[0].avatar = `${baseURL}/${conv.participants[0].avatar}`;
+        }
         conv.setDataValue("participant", conv.participants[0]);
       }
     };
@@ -75,5 +83,6 @@ module.exports = (sequelize, DataTypes) => {
 
     return result;
   });
+
   return Conversation;
 };

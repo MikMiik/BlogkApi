@@ -1,13 +1,22 @@
-const { Conversation, Message, User } = require("@/models");
+const {
+  Conversation,
+  Message,
+  User,
+  Conversation_Participant,
+} = require("@/models");
 const getCurrentUser = require("@/utils/getCurrentUser");
 const { Op } = require("sequelize");
 
 class MessageService {
   async getAllConversations() {
     const user = getCurrentUser();
+    const participateIn = await Conversation_Participant.findAll({
+      where: { userId: user.id },
+    });
+    const conversationIds = participateIn.map((p) => p.conversationId);
     const conversations = await Conversation.findAll({
       where: {
-        creatorId: user.id,
+        id: conversationIds,
       },
       attributes: ["id", "name", "creatorId", "avatar", "isOnline"],
       include: [
@@ -47,6 +56,7 @@ class MessageService {
       ],
       order: [["createdAt", "DESC"]],
     });
+
     return conversations;
   }
   async getConversationMessages({ conversationId }) {
@@ -62,6 +72,24 @@ class MessageService {
       ],
     });
     return messages;
+  }
+  async create(data) {
+    const currentUser = getCurrentUser();
+    const result = await Message.create({ senderId: currentUser.id, ...data });
+    const message = await Message.findOne({
+      where: {
+        id: result.id,
+      },
+      attributes: ["id", "type", "content", "status", "createdAt", "updatedAt"],
+      include: [
+        {
+          model: User,
+          as: "author",
+          attributes: ["id", "avatar"],
+        },
+      ],
+    });
+    return message;
   }
 }
 

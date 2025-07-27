@@ -64,6 +64,9 @@ const logout = async (refreshToken) => {
       message: "No refresh token provided — assumed short session logout.",
     };
   await deleteRefreshToken(refreshToken);
+  return {
+    message: "Logout successfully",
+  };
 };
 
 const sendForgotEmail = async (email) => {

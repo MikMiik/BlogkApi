@@ -28,8 +28,6 @@ module.exports = (sequelize, DataTypes) => {
 
       createdAt: DataTypes.DATE,
 
-      deletedAt: DataTypes.DATE,
-
       updatedAt: DataTypes.DATE,
     },
     {

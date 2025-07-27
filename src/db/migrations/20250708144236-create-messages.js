@@ -30,7 +30,7 @@ module.exports = {
       content: Sequelize.TEXT,
       status: {
         type: Sequelize.STRING(50),
-        defaultValue: "sending",
+        defaultValue: "sent",
       },
       deletedAt: Sequelize.DATE,
       createdAt: {

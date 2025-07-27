@@ -21,12 +21,19 @@ exports.getConversation = async (req, res) => {
 
 exports.send = async (req, res) => {
   try {
-    await pusher.trigger("k12", "new-message", {
-      message: req.body.message,
+    const { conversationId } = req.body;
+    const data = await messageService.create(req.body);
+    await pusher.trigger(`conversation-${conversationId}`, "new-message", {
+      data,
     });
     res.success(200);
   } catch (error) {
     console.error("Pusher trigger error:", error);
     res.error(500, "Failed to send message");
   }
+};
+
+exports.create = async (req, res) => {
+  const data = await messageService.create(req.body);
+  res.success(200, data);
 };
