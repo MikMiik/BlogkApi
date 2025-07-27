@@ -33,6 +33,15 @@ class UsersService {
     return user;
   }
 
+  async getUserEmail(id) {
+    const user = await User.findByPk(id, {
+      attributes: ["email"],
+      raw: true,
+      hooks: false,
+    });
+    return user?.email || null;
+  }
+
   async create(data) {
     const user = await User.create(data);
     return user;

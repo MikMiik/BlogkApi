@@ -32,7 +32,7 @@ exports.register = async (req, res) => {
 
 exports.me = async (req, res) => {
   try {
-    const accessToken = req.headers.authorization.replace("Bearer ", "");
+    const accessToken = req.headers?.authorization?.replace("Bearer ", "");
     const { userId } = await authService.checkUser(accessToken);
     const user = await usersService.getById(userId);
     res.success(200, user);

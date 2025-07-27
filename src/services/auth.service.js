@@ -1,5 +1,4 @@
-const { User } = require("@/models");
-const { hashPassword, comparePassword } = require("@/utils/bcrytp");
+const { hashPassword } = require("@/utils/bcrytp");
 const { verifyAccessToken, generateMailToken } = require("./jwt.service");
 const {
   findValidRefreshToken,
@@ -80,6 +79,7 @@ const sendForgotEmail = async (email) => {
 
       queue.dispatch("sendForgotPasswordEmailJob", {
         userId: user.id,
+        email: user.email,
         token: tokenData.token,
         resetPasswordUrl,
       });

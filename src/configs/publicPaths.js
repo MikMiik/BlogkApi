@@ -8,8 +8,6 @@ const publicPaths = [
 ];
 
 function isPublicRoute(path, method) {
-  console.log(path);
-
   const normalizedMethod = method.toLowerCase();
   return publicPaths.some((rule) => {
     const fullPath = rule.path;

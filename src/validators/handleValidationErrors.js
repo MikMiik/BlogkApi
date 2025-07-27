@@ -6,19 +6,9 @@ const handleValidationErrors = async (req, res, next) => {
     return next();
   }
 
-  const formatted = errors
-    .array({
-      onlyFirstError: true,
-    })
-    // .map((error) => ({
-    //   field: error.path,
-    //   message: error.msg,
-    // }));
-    .reduce((errors, error) => {
-      errors[error.path] = error.msg;
-
-      return errors;
-    }, {});
+  const formatted = errors.array({
+    onlyFirstError: true,
+  })[0]?.msg;
   res.error(401, formatted);
 };
 

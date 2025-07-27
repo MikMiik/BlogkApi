@@ -8,7 +8,7 @@ async function sendForgotPasswordEmailJob(job) {
 
   const message = {
     from: mail.SENDER_FROM,
-    to: "minh093653243@gmail.com",
+    to: data.email,
     subject: "Forgot Password Message",
     html: template,
   };
