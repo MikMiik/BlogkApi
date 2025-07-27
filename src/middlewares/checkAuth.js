@@ -1,5 +1,4 @@
 const jwtService = require("@/services/jwt.service");
-const userService = require("@/services/user.service");
 const isPublicRoute = require("../configs/publicPaths");
 
 async function checkAuth(req, res, next) {

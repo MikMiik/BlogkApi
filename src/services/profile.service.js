@@ -2,6 +2,7 @@ const { User, Achievement, Post, Topic, Privacy, Follow } = require("@/models");
 const { Op } = require("sequelize");
 const userService = require("./user.service");
 const getCurrentUser = require("@/utils/getCurrentUser");
+const { session } = require("@/middlewares/setContext");
 
 class ProfileService {
   async getById({ id, page = 1, limit = 10 }) {
@@ -134,7 +135,7 @@ class ProfileService {
 
   async editProfile({ data, files }) {
     const userId = getCurrentUser();
-    console.log(userId);
+    console.log(session.get("userId"));
 
     try {
       if (files.avatar) {

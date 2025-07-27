@@ -4,6 +4,7 @@ const router = express.Router();
 const postController = require("@/controllers/api/post.controller");
 const attachResourceLoaders = require("@/utils/attachResourceLoaders");
 const handleUpload = require("@/middlewares/handleUpload");
+const ensureAsyncContext = require("@/utils/asyncHooks");
 
 // Posts
 router.get("/", postController.getList);
@@ -13,17 +14,18 @@ router.post("/draft", postController.draft);
 router.get("/write/:id", postController.getToEdit);
 router.put(
   "/write/:id",
-  handleUpload.single("coverImage"),
+  ensureAsyncContext(handleUpload.single("coverImage")),
+
   postController.edit
 );
 router.patch(
   "/write/:id",
-  handleUpload.single("coverImage"),
+  ensureAsyncContext(handleUpload.single("coverImage")),
   postController.edit
 );
 router.post(
   "/publish",
-  handleUpload.single("coverImage"),
+  ensureAsyncContext(handleUpload.single("coverImage")),
   postController.publish
 );
 router.post("/:id/like", postController.likeOne);
