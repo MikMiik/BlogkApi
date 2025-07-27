@@ -2,12 +2,12 @@ const { createNamespace } = require("cls-hooked");
 const session = createNamespace("my session");
 
 const setContext = (req, res, next) => {
-  if (req.userId) {
-    session.run(() => {
+  session.run(() => {
+    if (req.userId) {
       session.set("userId", req.userId);
-    });
-  }
-  next();
+    }
+    next();
+  });
 };
 
 module.exports = { setContext, session };

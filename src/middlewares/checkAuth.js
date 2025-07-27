@@ -4,10 +4,10 @@ const isPublicRoute = require("../configs/publicPaths");
 
 async function checkAuth(req, res, next) {
   try {
-    if (isPublicRoute(req.path, req.method)) {
+    const authHeader = req.headers?.authorization;
+    if (isPublicRoute(req.path, req.method) && !authHeader) {
       return next();
     }
-    const authHeader = req.headers?.authorization;
     if (!authHeader) {
       return res.error(401, { message: "Authorization header missing" });
     }
@@ -22,6 +22,7 @@ async function checkAuth(req, res, next) {
     const payload = jwtService.verifyAccessToken(token);
 
     req.userId = payload.userId;
+
     next();
   } catch (error) {
     return res.error(401, error.message);

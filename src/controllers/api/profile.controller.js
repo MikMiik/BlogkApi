@@ -6,7 +6,6 @@ exports.getOne = async (req, res) => {
     id: req.params.id,
     page: +page,
     limit: +limit,
-    userId: req.user.id,
   });
   res.success(200, data);
 };
@@ -18,7 +17,6 @@ exports.getOneToEdit = async (req, res) => {
 };
 exports.follow = async (req, res) => {
   const { username } = req.params;
-  console.log(username);
 
   const data = await profileService.follow(username);
   res.success(200, data);
@@ -31,7 +29,6 @@ exports.unfollow = async (req, res) => {
 
 exports.update = async (req, res) => {
   const result = await profileService.editProfile({
-    userId: req.user.id,
     data: req.body,
     files: req.files,
   });

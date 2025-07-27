@@ -4,7 +4,9 @@ const userService = require("./user.service");
 const getCurrentUser = require("@/utils/getCurrentUser");
 
 class ProfileService {
-  async getById({ id, page = 1, limit = 10, userId }) {
+  async getById({ id, page = 1, limit = 10 }) {
+    const userId = getCurrentUser();
+
     const offset = (page - 1) * limit;
 
     const user = await User.findOne({
@@ -130,7 +132,10 @@ class ProfileService {
     return { user };
   }
 
-  async editProfile({ userId, data, files }) {
+  async editProfile({ data, files }) {
+    const userId = getCurrentUser();
+    console.log(userId);
+
     try {
       if (files.avatar) {
         data.avatar = `/uploads/${files.avatar[0].filename}`;
@@ -151,9 +156,7 @@ class ProfileService {
 
       return { message: "Update successfully" };
     } catch (error) {
-      console.log(error);
-
-      throw new Error("Update failed");
+      throw new Error(`Update failed: ${error.message}`);
     }
   }
 

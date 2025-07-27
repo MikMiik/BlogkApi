@@ -10,7 +10,6 @@ exports.getAllConversations = async (req, res) => {
 
 exports.getConversation = async (req, res) => {
   const { id } = req.params;
-  console.log(id);
 
   const data = await messageService.getConversationMessages({
     conversationId: id,

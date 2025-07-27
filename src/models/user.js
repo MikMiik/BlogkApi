@@ -2,7 +2,6 @@
 const getCurrentUser = require("@/utils/getCurrentUser");
 const { Model } = require("sequelize");
 const { default: slugify } = require("slugify");
-const baseURL = process.env.BASE_URL || "http://localhost:3000";
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
@@ -78,9 +77,27 @@ module.exports = (sequelize, DataTypes) => {
 
       twoFactorSecret: DataTypes.STRING(50),
 
-      avatar: DataTypes.STRING(255),
+      avatar: {
+        type: DataTypes.STRING(255),
+        get() {
+          const raw = this.getDataValue("avatar");
+          if (!raw) return null;
+          return raw.startsWith("http")
+            ? raw
+            : `${process.env.BASE_URL}/${raw}`;
+        },
+      },
 
-      coverImage: DataTypes.STRING(255),
+      coverImage: {
+        type: DataTypes.STRING(255),
+        get() {
+          const raw = this.getDataValue("coverImage");
+          if (!raw) return null;
+          return raw.startsWith("http")
+            ? raw
+            : `${process.env.BASE_URL}/${raw}`;
+        },
+      },
 
       skills: DataTypes.JSON,
 
@@ -123,63 +140,48 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "User",
       tableName: "users",
       timestamps: true,
-      hooks: {
-        beforeCreate: async (user, options) => {
-          if (user.firstName || user.lastName) {
-            const baseSlug = slugify(
-              (user.firstName || "") + " " + (user.lastName || ""),
-              {
-                lower: true,
-                strict: true,
-              }
-            );
-
-            let slug = baseSlug;
-            let counter = 1;
-
-            // Tìm xem username đã tồn tại chưa
-            const existingUser = await User.findOne({
-              where: { username: slug },
-            });
-
-            while (existingUser) {
-              slug = `${baseSlug}-${counter}`;
-              counter++;
-
-              // kiểm tra tiếp slug mới
-              const exists = await User.findOne({
-                where: { username: slug },
-              });
-
-              if (!exists) break;
-            }
-
-            user.username = slug;
-          }
-        },
-      },
     }
   );
 
-  User.addHook("afterFind", (result) => {
-    const patchUser = (user) => {
-      if (user.avatar && !user.avatar.startsWith("http")) {
-        user.avatar = `${baseURL}/${user.avatar}`;
+  // Handle username
+  User.addHook("beforeCreate", async (user, options) => {
+    if (options?.skipHandleUsername) return;
+    if (user.firstName || user.lastName) {
+      const baseSlug = slugify(
+        (user.firstName || "") + " " + (user.lastName || ""),
+        {
+          lower: true,
+          strict: true,
+        }
+      );
+
+      let slug = baseSlug;
+      let counter = 1;
+
+      const existingUser = await User.findOne({
+        where: { username: slug },
+        hooks: false,
+      });
+
+      while (existingUser) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+
+        const exists = await User.findOne({
+          where: { username: slug },
+          hooks: false,
+        });
+
+        if (!exists) break;
       }
 
-      if (user.coverImage && !user.coverImage.startsWith("http")) {
-        user.coverImage = `${baseURL}/${user.coverImage}`;
-      }
-    };
-
-    if (Array.isArray(result)) {
-      result.forEach(patchUser);
-    } else if (result) {
-      patchUser(result);
+      user.username = slug;
     }
   });
 
-  User.addHook("afterFind", async (result) => {
+  // Handle isfollowed
+  User.addHook("afterFind", async (result, options) => {
+    if (options?.skipHandleIsFollowed) return;
     const userId = getCurrentUser();
     const { Follow } = sequelize.models;
 
@@ -220,5 +222,6 @@ module.exports = (sequelize, DataTypes) => {
       result.setDataValue("isFollowed", !!followed);
     }
   });
+
   return User;
 };

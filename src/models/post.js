@@ -64,7 +64,16 @@ module.exports = (sequelize, DataTypes) => {
 
       readTime: DataTypes.INTEGER,
 
-      thumbnail: DataTypes.STRING(255),
+      thumbnail: {
+        type: DataTypes.STRING(255),
+        get() {
+          const raw = this.getDataValue("thumbnail");
+          if (!raw) return null;
+          return raw.startsWith("http")
+            ? raw
+            : `${process.env.BASE_URL}/${raw}`;
+        },
+      },
 
       status: {
         type: DataTypes.STRING(50),
@@ -138,36 +147,38 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
-      hooks: {
-        beforeCreate: async (post, options) => {
-          if (post.title && !post.slug) {
-            const baseSlug = slugify(post.title, {
-              lower: true,
-              strict: true,
-            });
-            let slug = baseSlug;
-            let counter = 1;
-            const existingSlug = await Post.findOne({
-              where: { slug },
-            });
-            while (existingSlug) {
-              slug = `${baseSlug}-${counter}`;
-              counter++;
-
-              const exists = await Post.findOne({
-                where: { slug },
-              });
-
-              if (!exists) break;
-            }
-            post.slug = slug;
-          }
-        },
-      },
     }
   );
 
-  Post.addHook("afterFind", async (result) => {
+  // Create slug
+  Post.addHook("beforeCreate", async (post) => {
+    if (post.title && !post.slug) {
+      const baseSlug = slugify(post.title, {
+        lower: true,
+        strict: true,
+      });
+      let slug = baseSlug;
+      let counter = 1;
+      const existingSlug = await Post.findOne({
+        where: { slug },
+      });
+      while (existingSlug) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+
+        const exists = await Post.findOne({
+          where: { slug },
+        });
+
+        if (!exists) break;
+      }
+      post.slug = slug;
+    }
+  });
+
+  // Handle isliked
+  Post.addHook("afterFind", async (result, options) => {
+    if (options?.skipHandleIsLiked) return;
     const userId = getCurrentUser();
 
     const { Like } = sequelize.models;
@@ -187,7 +198,6 @@ module.exports = (sequelize, DataTypes) => {
       return;
     }
 
-    // Có userId → xử lý như thường
     if (result && result.posts && Array.isArray(result.posts)) {
       const postIds = result.posts.map((post) => post.id);
 
@@ -232,7 +242,9 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
 
-  Post.addHook("afterFind", async (result) => {
+  // Handle isbookmarked
+  Post.addHook("afterFind", async (result, options) => {
+    if (options?.skipHandleIsBookmarked) return;
     const userId = getCurrentUser();
     const { Bookmark } = sequelize.models;
 
@@ -275,34 +287,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
 
-  Post.addHook("afterFind", (result) => {
-    const patchPostCoverImage = (post) => {
-      if (post.thumbnail && !post.thumbnail.startsWith("http")) {
-        post.thumbnail = `${baseURL}/${post.thumbnail}`;
-      }
-    };
-
-    if (Array.isArray(result)) {
-      result.forEach(patchPostCoverImage);
-    } else if (result) {
-      patchPostCoverImage(result);
-    }
-  });
-
-  Post.addHook("afterFind", (result) => {
-    const patchPostAuthorAvatar = (post) => {
-      if (post?.author?.avatar && !post?.author?.avatar.startsWith("http")) {
-        post.author.avatar = `${baseURL}/${post.author.avatar}`;
-      }
-    };
-
-    if (Array.isArray(result)) {
-      result.forEach(patchPostAuthorAvatar);
-    } else if (result) {
-      patchPostAuthorAvatar(result);
-    }
-  });
-
+  // Increase postCount
   Post.addHook("afterCreate", async (post) => {
     if (post) {
       const { User } = sequelize.models;
@@ -313,6 +298,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
 
+  // Decrease postCount
   Post.addHook("afterDestroy", async (post, options) => {
     if (post) {
       const { User } = sequelize.models;
