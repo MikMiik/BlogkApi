@@ -309,7 +309,7 @@ class PostsService {
   }
 
   async getBookmarkPosts() {
-    const { id: userId } = getCurrentUser();
+    const userId = getCurrentUser();
     const bookmarks = await Bookmark.findAll({
       where: {
         userId,
@@ -367,7 +367,7 @@ class PostsService {
   }
 
   async getOwnPosts() {
-    const { id: userId } = getCurrentUser();
+    const userId = getCurrentUser();
     const { rows: posts, count } = await Post.unscoped().findAndCountAll({
       where: { userId },
       order: [["createdAt", "DESC"]],
@@ -434,13 +434,13 @@ class PostsService {
   }
 
   async likePost(postId) {
-    const { id: userId } = getCurrentUser();
+    const userId = getCurrentUser();
     await Like.create({ userId, likableId: postId, likableType: "Post" });
     return { message: "Post liked" };
   }
 
   async unlikePost(postId) {
-    const { id: userId } = getCurrentUser();
+    const userId = getCurrentUser();
     const like = await Like.findOne({
       where: { userId, likableId: postId, likableType: "Post" },
     });
@@ -451,13 +451,13 @@ class PostsService {
   }
 
   async bookmarkPost(postId) {
-    const { id: userId } = getCurrentUser();
+    const userId = getCurrentUser();
     await Bookmark.create({ postId, userId });
     return { message: "Post bookmarked" };
   }
 
   async unBookmarkPost(postId) {
-    const { id: userId } = getCurrentUser();
+    const userId = getCurrentUser();
     const bookmark = await Bookmark.findOne({
       where: { postId, userId },
     });
@@ -469,7 +469,7 @@ class PostsService {
 
   async publishPost(data) {
     const { isScheduled, postId, publishDate, topics, ...body } = data;
-    const { id: userId } = getCurrentUser();
+    const userId = getCurrentUser();
     if (postId) {
       await this.update(postId, body);
       await handlePostTopic({ postId, topicNames: JSON.parse(topics) });

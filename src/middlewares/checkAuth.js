@@ -1,29 +1,27 @@
 const jwtService = require("@/services/jwt.service");
 const userService = require("@/services/user.service");
+const isPublicRoute = require("../configs/publicPaths");
 
 async function checkAuth(req, res, next) {
   try {
-    const publicPaths = ["/about", "/contact", "/auth"];
-
-    const notAuthRequired =
-      req.path === "/" || publicPaths.some((path) => req.path.startsWith(path));
-
-    if (notAuthRequired) {
+    if (isPublicRoute(req.path, req.method)) {
       return next();
     }
-    const token = req.headers?.authorization?.replace("Bearer ", "");
-    if (!token) {
-      return res.error(401, { message: "Token invalid", redirect: "/login" });
+    const authHeader = req.headers?.authorization;
+    if (!authHeader) {
+      return res.error(401, { message: "Authorization header missing" });
     }
-    if (token) {
-      const payload = jwtService.verifyAccessToken(token);
-      const user = await userService.getById(payload.userId);
-      if (!user) {
-        return res.error(401, "User not found");
-      }
-      req.user = user;
+    const parts = authHeader.split(" ");
+    if (parts.length !== 2 || parts[0] !== "Bearer") {
+      return res.error(401, {
+        message: 'Invalid Authorization format. Format is "Bearer <token>"',
+      });
     }
+    const token = parts[1];
 
+    const payload = jwtService.verifyAccessToken(token);
+
+    req.userId = payload.userId;
     next();
   } catch (error) {
     return res.error(401, error.message);

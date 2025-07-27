@@ -158,7 +158,7 @@ class ProfileService {
   }
 
   async follow(username) {
-    const { id: userId } = getCurrentUser();
+    const userId = getCurrentUser();
     const user = await User.findOne({
       where: { username },
     });
@@ -167,7 +167,7 @@ class ProfileService {
   }
 
   async unfollow(username) {
-    const { id: userId } = getCurrentUser();
+    const userId = getCurrentUser();
     const user = await User.findOne({ where: { username } });
     const follow = await Follow.findOne({
       where: { followerId: userId, followedId: user.id },

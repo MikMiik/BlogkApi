@@ -180,8 +180,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   User.addHook("afterFind", async (result) => {
-    const user = getCurrentUser();
-    const userId = user?.id;
+    const userId = getCurrentUser();
     const { Follow } = sequelize.models;
 
     if (!userId) {

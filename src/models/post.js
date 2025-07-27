@@ -168,7 +168,7 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   Post.addHook("afterFind", async (result) => {
-    const { id: userId } = getCurrentUser();
+    const userId = getCurrentUser();
 
     const { Like } = sequelize.models;
 
@@ -233,7 +233,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Post.addHook("afterFind", async (result) => {
-    const { id: userId } = getCurrentUser();
+    const userId = getCurrentUser();
     const { Bookmark } = sequelize.models;
 
     if (!userId) {

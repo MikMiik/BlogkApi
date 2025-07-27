@@ -9,9 +9,9 @@ const { Op } = require("sequelize");
 
 class MessageService {
   async getAllConversations() {
-    const user = getCurrentUser();
+    const userId = getCurrentUser();
     const participateIn = await Conversation_Participant.findAll({
-      where: { userId: user.id },
+      where: { userId },
     });
     const conversationIds = participateIn.map((p) => p.conversationId);
     const conversations = await Conversation.findAll({
@@ -74,8 +74,8 @@ class MessageService {
     return messages;
   }
   async create(data) {
-    const currentUser = getCurrentUser();
-    const result = await Message.create({ senderId: currentUser.id, ...data });
+    const userId = getCurrentUser();
+    const result = await Message.create({ senderId: userId, ...data });
     const message = await Message.findOne({
       where: {
         id: result.id,
