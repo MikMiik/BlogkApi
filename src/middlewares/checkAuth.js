@@ -4,13 +4,11 @@ const isPublicRoute = require("../configs/publicPaths");
 async function checkAuth(req, res, next) {
   try {
     const authHeader = req.headers?.authorization;
+
     if (isPublicRoute(req.path, req.method) && !authHeader) {
       return next();
     }
-    if (!authHeader) {
-      return res.error(401, "Authorization header missing");
-    }
-    const parts = authHeader.split(" ");
+    const parts = authHeader?.split(" ");
     if (parts.length !== 2 || parts[0] !== "Bearer") {
       return res.error(
         401,

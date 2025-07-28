@@ -6,7 +6,7 @@ const publicPaths = [
   { path: "/auth", method: "all", startsWith: true },
   { path: "/posts", method: "get", exact: true },
   { path: "/posts/:id", method: "get", pattern: true, exact: true },
-  { path: "/topics", method: "get", startsWiths: true },
+  { path: "/topics", method: "get", startsWith: true },
 ];
 
 function isPublicRoute(path, method) {

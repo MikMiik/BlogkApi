@@ -9,6 +9,7 @@ const buildTokenResponse = require("@/utils/buildTokenResponse");
 const generateClientUrl = require("@/utils/generateClientUrl");
 const userService = require("./user.service");
 const queue = require("@/utils/queue");
+const throw404 = require("@/utils/throw404");
 
 const register = async (data) => {
   const user = await userService.create({
@@ -41,9 +42,6 @@ const checkUser = async (accessToken) => {
 
 const refreshAccessToken = async (refreshTokenString) => {
   const refreshToken = await findValidRefreshToken(refreshTokenString);
-  if (!refreshToken) {
-    throw new Error("Refresh token invalid");
-  }
   try {
     const result = await buildTokenResponse({
       userId: refreshToken.userId,
@@ -58,10 +56,6 @@ const refreshAccessToken = async (refreshTokenString) => {
 };
 
 const logout = async (refreshToken) => {
-  if (!refreshToken)
-    return {
-      message: "No refresh token provided — assumed short session logout.",
-    };
   await deleteRefreshToken(refreshToken);
   return {
     message: "Logout successfully",

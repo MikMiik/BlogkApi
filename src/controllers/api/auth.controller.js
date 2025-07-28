@@ -55,7 +55,7 @@ exports.refreshToken = async (req, res) => {
 exports.logout = async (req, res) => {
   try {
     const result = await authService.logout(req.body.refreshToken);
-    res.success(200, result.message);
+    res.success(200, result);
   } catch (error) {
     res.error(401, error.message);
   }

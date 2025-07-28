@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const profilesController = require("@/controllers/api/profile.controller");
+const profileValidator = require("@/validators/profile.validator");
 const handleUpload = require("@/middlewares/handleUpload");
 const ensureAsyncContext = require("@/utils/asyncHooks");
 
@@ -17,7 +18,7 @@ router.patch(
       { name: "coverImage", maxCount: 1 },
     ])
   ),
-
+  profileValidator.edit,
   profilesController.update
 );
 router.put(
@@ -28,6 +29,7 @@ router.put(
       { name: "coverImage", maxCount: 1 },
     ])
   ),
+  profileValidator.edit,
   profilesController.update
 );
 

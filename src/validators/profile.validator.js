@@ -1,67 +1,83 @@
 const { checkSchema } = require("express-validator");
-const { comparePassword } = require("@/utils/bcrytp");
-const sendUnverifiedUserEmail = require("@/utils/sendUnverifiedUserEmail");
 const handleValidationErrors = require("./handleValidationErrors");
-const userService = require("@/services/user.service");
 
 exports.edit = [
   checkSchema({
     firstName: {
+      trim: true,
       notEmpty: {
-        errorMessage: "Registration failed: Please enter your first name.",
+        errorMessage: "Please enter your first name",
+      },
+      isLength: {
+        options: { min: 2 },
+        errorMessage: "First name must be at least 2 characters",
       },
     },
+
     lastName: {
+      trim: true,
       notEmpty: {
-        errorMessage: "Registration failed: Please enter your last name.",
+        errorMessage: "Please enter your last name",
       },
-    },
-    email: {
-      notEmpty: {
-        errorMessage: "Registration failed: Please enter your email.",
-      },
-      isEmail: {
-        errorMessage: "Registration failed: Not a valid e-mail address.",
-      },
-      custom: {
-        options: async (value, { req }) => {
-          const user = await userService.getByEmail(value);
-          if (user) {
-            throw new Error(
-              "Registration failed: This email has already existed."
-            );
-          }
-        },
+      isLength: {
+        options: { min: 2 },
+        errorMessage: "Last name must be at least 2 characters",
       },
     },
 
-    password: {
+    username: {
+      trim: true,
       notEmpty: {
-        errorMessage: "Registration failed: Please enter your password.",
+        errorMessage: "Please enter your username",
       },
-      isStrongPassword: {
+      matches: {
+        options: /^[a-zA-Z0-9_-]+$/,
         errorMessage:
-          "Registration failed: Password must contain at least 8 characters, including uppercase, lowercase, number, and symbol.",
+          "Username can only contain letters, numbers, hyphens and underscores",
       },
     },
 
-    confirmPassword: {
-      notEmpty: {
-        errorMessage:
-          "Registration failed: Please enter your confirm password.",
-      },
-      custom: {
-        options: async (value, { req }) => value === req.body.password,
-        errorMessage: "Registration failed: Passwords do not match.",
-      },
-    },
-
-    agreeToTerms: {
+    website: {
+      optional: { options: { nullable: true } },
       custom: {
         options: (value) => {
-          return value === true || value === "true";
+          if (!value) return true;
+          return value.startsWith("http://") || value.startsWith("https://");
         },
-        errorMessage: "Registration failed: You must agree to the terms.",
+        errorMessage: "Website URL must start with http:// or https://",
+      },
+    },
+
+    "socials.twitter": {
+      optional: { options: { nullable: true } },
+      custom: {
+        options: (value) => {
+          if (!value) return true;
+          return value.startsWith("http://") || value.startsWith("https://");
+        },
+        errorMessage: "Twitter URL must start with http:// or https://",
+      },
+    },
+
+    "socials.github": {
+      optional: { options: { nullable: true } },
+      custom: {
+        options: (value) => {
+          if (!value) return true;
+          return value.startsWith("http://") || value.startsWith("https://");
+        },
+        errorMessage: "Github URL must start with http:// or https://",
+      },
+    },
+
+    "socials.linkedin": {
+      optional: { options: { nullable: true } },
+      custom: {
+        options: (value) => {
+          if (!value) return true;
+          return value.startsWith("http://") || value.startsWith("https://");
+        },
+        errorMessage: "LinkedIn URL must start with http:// or https://",
       },
     },
   }),

@@ -7,16 +7,19 @@ const userService = require("@/services/user.service");
 exports.register = [
   checkSchema({
     firstName: {
+      trim: true,
       notEmpty: {
         errorMessage: "Registration failed: Please enter your first name.",
       },
     },
     lastName: {
+      trim: true,
       notEmpty: {
         errorMessage: "Registration failed: Please enter your last name.",
       },
     },
     email: {
+      trim: true,
       notEmpty: {
         errorMessage: "Registration failed: Please enter your email.",
       },
@@ -87,6 +90,22 @@ exports.login = [
             throw new Error(
               "Your account is not verified. Please check the link we sent to your email to verify."
             );
+          }
+        },
+      },
+    },
+  }),
+  handleValidationErrors,
+];
+
+exports.refreshToken = [
+  checkSchema({
+    refreshToken: {
+      custom: {
+        options: async (value) => {
+          const result = await findValidRefreshToken(value);
+          if (!result) {
+            throw new Error("Refresh token invalid");
           }
         },
       },

@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 
 const usersController = require("@/controllers/api/user.controller");
-const attachResourceLoaders = require("@/utils/attachResourceLoaders");
 
 // Users
 router.get("/", usersController.getList);
