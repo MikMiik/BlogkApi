@@ -1,4 +1,5 @@
 const { Comment, User, Like } = require("@/models");
+const getCurrentUser = require("@/utils/getCurrentUser");
 const { Op } = require("sequelize");
 class CommentsService {
   async getAll() {
@@ -72,12 +73,14 @@ class CommentsService {
     return comment;
   }
 
-  async likeComment({ commentId, userId }) {
+  async likeComment(commentId) {
+    const userId = getCurrentUser();
     await Like.create({ userId, likableId: commentId, likableType: "Comment" });
     return { message: "Comment liked" };
   }
 
-  async unlikeComment({ commentId, userId }) {
+  async unlikeComment(commentId) {
+    const userId = getCurrentUser();
     const like = await Like.findOne({
       where: { userId, likableId: commentId, likableType: "Comment" },
     });

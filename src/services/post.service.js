@@ -414,7 +414,8 @@ class PostsService {
   }
 
   async create(data) {
-    const post = await Post.create(data);
+    const userId = getCurrentUser();
+    const post = await Post.create({ ...data, userId });
     return { message: "Create successfully", slug: post.slug };
   }
 
@@ -465,6 +466,18 @@ class PostsService {
 
     await bookmark.destroy();
     return { message: "Post unBookmarked" };
+  }
+
+  async clearBookmarks() {
+    const userId = getCurrentUser();
+
+    const deletedCount = await Bookmark.destroy({
+      where: { userId },
+    });
+
+    return {
+      message: `Cleared ${deletedCount} bookmarks`,
+    };
   }
 
   async publishPost(data) {

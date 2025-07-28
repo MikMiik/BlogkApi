@@ -33,35 +33,33 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "Topic",
       tableName: "topics",
       timestamps: true,
-
-      hooks: {
-        beforeCreate: async (topic, options) => {
-          if (topic.name && !topic.slug) {
-            const baseSlug = slugify(topic.name, {
-              lower: true,
-              strict: true,
-            });
-            let slug = baseSlug;
-
-            let counter = 1;
-            const existingSlug = await Topic.findOne({
-              where: { slug },
-            });
-            while (existingSlug) {
-              slug = `${baseSlug}-${counter}`;
-              counter++;
-
-              const exists = await Topic.findOne({
-                where: { slug },
-              });
-
-              if (!exists) break;
-            }
-            topic.slug = slug;
-          }
-        },
-      },
     }
   );
+
+  Topic.addHook("beforeCreate", async (topic, options) => {
+    if (topic.name && !topic.slug) {
+      const baseSlug = slugify(topic.name, {
+        lower: true,
+        strict: true,
+      });
+      let slug = baseSlug;
+
+      let counter = 1;
+      const existingSlug = await Topic.findOne({
+        where: { slug },
+      });
+      while (existingSlug) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+
+        const exists = await Topic.findOne({
+          where: { slug },
+        });
+
+        if (!exists) break;
+      }
+      topic.slug = slug;
+    }
+  });
   return Topic;
 };

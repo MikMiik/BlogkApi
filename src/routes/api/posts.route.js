@@ -32,6 +32,7 @@ router.post("/:id/like", postController.likeOne);
 router.delete("/:id/unlike", postController.unlikeOne);
 router.post("/:id/bookmark", postController.bookmarkOne);
 router.delete("/:id/unbookmark", postController.unBookmarkOne);
+router.delete("/clear-bookmarks", postController.clearBookmarks);
 router.get("/:id", postController.getOne);
 router.delete("/:id", postController.remove);
 

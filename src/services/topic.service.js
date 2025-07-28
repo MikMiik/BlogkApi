@@ -1,4 +1,5 @@
 const { Post, Topic, User } = require("@/models");
+const getCurrentUser = require("@/utils/getCurrentUser");
 const { Op } = require("sequelize");
 const { fn, col, literal } = require("sequelize");
 class TopicsService {
@@ -52,9 +53,9 @@ class TopicsService {
     return { topics, trendingTopics };
   }
 
-  async getById({ idOrSlug, page = 1, limit = 10, userId }) {
+  async getById({ idOrSlug, page = 1, limit = 10 }) {
     const offset = (page - 1) * limit;
-
+    const userId = getCurrentUser();
     const topic = await Topic.findOne({
       where: {
         [Op.or]: [{ id: idOrSlug }, { slug: idOrSlug }],

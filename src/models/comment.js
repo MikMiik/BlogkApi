@@ -1,5 +1,6 @@
 "use strict";
-const { Model } = require("sequelize");
+const getCurrentUser = require("@/utils/getCurrentUser");
+const { Model, Op } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Comment extends Model {
     static associate(models) {
@@ -68,25 +69,22 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
+  //Handle isLiked
   Comment.addHook("afterFind", async (result, options) => {
-    const userId = options.userId;
+    if (options?.skipHandleIsLiked) return;
+
+    const userId = getCurrentUser();
     const { Like } = sequelize.models;
 
-    // Nếu không có userId → set tất cả isLiked = false
-    if (!userId) {
-      if (Array.isArray(result)) {
-        result.forEach((comment) => {
-          comment.setDataValue("isLiked", false);
-        });
-      } else if (result && result.id) {
-        result.setDataValue("isLiked", false);
-      }
-      return;
-    }
+    // Đảm bảo luôn xử lý mảng
+    const comments = Array.isArray(result) ? result : result ? [result] : [];
 
-    // Có userId → xử lý như thường
-    if (Array.isArray(result)) {
-      const commentIds = result.map((comment) => comment.id);
+    if (comments.length === 0) return;
+
+    if (!userId) {
+      comments.forEach((c) => c.setDataValue("isLiked", false));
+    } else {
+      const commentIds = comments.map((c) => c.id);
 
       const likes = await Like.findAll({
         where: {
@@ -97,20 +95,9 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       const likedIds = new Set(likes.map((l) => l.likableId));
-
-      result.forEach((comment) => {
-        comment.setDataValue("isLiked", likedIds.has(comment.id));
+      comments.forEach((c) => {
+        c.setDataValue("isLiked", likedIds.has(c.id));
       });
-    } else if (result && result.id) {
-      const like = await Like.findOne({
-        where: {
-          userId,
-          likableType: "Comment",
-          likableId: result.id,
-        },
-      });
-
-      result.setDataValue("isLiked", !!like);
     }
   });
   return Comment;

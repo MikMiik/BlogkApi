@@ -13,7 +13,7 @@ exports.getOne = async (req, res) => {
     idOrSlug: req.params.id,
     page: +page,
     limit: +limit,
-    userId: req.user.id,
   });
+  if (!data) throw404();
   res.success(200, data);
 };

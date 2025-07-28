@@ -30,31 +30,36 @@ exports.getToEdit = async (req, res) => {
 };
 
 exports.likeOne = async (req, res) => {
-  const { postId } = req.body;
-  const data = await postService.likePost(postId);
+  const { id } = req.params;
+  const data = await postService.likePost(id);
   res.success(200, data);
 };
 
 exports.unlikeOne = async (req, res) => {
-  const { postId } = req.body;
-  const data = await postService.unlikePost(postId);
+  const { id } = req.params;
+  const data = await postService.unlikePost(id);
   res.success(200, data);
 };
 
 exports.bookmarkOne = async (req, res) => {
-  const { postId } = req.body;
-  const data = await postService.bookmarkPost(postId);
+  const { id } = req.params;
+  const data = await postService.bookmarkPost(id);
   res.success(200, data);
 };
 
 exports.unBookmarkOne = async (req, res) => {
-  const { postId } = req.body;
-  const data = await postService.unBookmarkPost(postId);
+  const { id } = req.params;
+  const data = await postService.unBookmarkPost(id);
+  res.success(200, data);
+};
+
+exports.clearBookmarks = async (req, res) => {
+  const data = await postService.clearBookmarks();
   res.success(200, data);
 };
 
 exports.draft = async (req, res) => {
-  const data = await postService.create({ ...req.body, userId: req.user.id });
+  const data = await postService.create(req.body);
   res.success(201, data);
 };
 

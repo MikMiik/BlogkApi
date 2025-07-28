@@ -19,29 +19,25 @@ exports.create = async (req, res) => {
 };
 
 exports.update = async (req, res) => {
-  const comment = await commentService.update(req.comment.id, req.body);
+  const { id } = req.params;
+  const comment = await commentService.update(id, req.body);
   res.success(200, comment);
 };
 
 exports.likeOne = async (req, res) => {
-  const { commentId } = req.body;
-  const data = await commentService.likeComment({
-    commentId,
-    userId: req.user.id,
-  });
+  const { id } = req.params;
+  const data = await commentService.likeComment(id);
   res.success(200, data);
 };
 
 exports.unlikeOne = async (req, res) => {
-  const { commentId } = req.body;
-  const data = await commentService.unlikeComment({
-    commentId,
-    userId: req.user.id,
-  });
+  const { id } = req.params;
+  const data = await commentService.unlikeComment(id);
   res.success(200, data);
 };
 
 exports.remove = async (req, res) => {
-  await commentService.remove(req.comment.id);
+  const { id } = req.params;
+  await commentService.remove(id);
   res.success(204);
 };

@@ -184,20 +184,16 @@ module.exports = (sequelize, DataTypes) => {
     if (options?.skipHandleIsFollowed) return;
     const userId = getCurrentUser();
     const { Follow } = sequelize.models;
+    const users = Array.isArray(result) ? result : result ? [result] : [];
+
+    if (users.length === 0) return;
 
     if (!userId) {
-      if (Array.isArray(result)) {
-        result.forEach((post) => {
-          post.setDataValue("isFollowed", false);
-        });
-      } else if (result && result.id) {
-        result.setDataValue("isFollowed", false);
-      }
-      return;
-    }
-
-    if (Array.isArray(result)) {
-      const userIds = result.map((user) => user.id);
+      users.forEach((u) => {
+        u.setDataValue("isFollowed", false);
+      });
+    } else {
+      const userIds = users.map((user) => user.id);
 
       const followeds = await Follow.findAll({
         where: {
@@ -208,18 +204,9 @@ module.exports = (sequelize, DataTypes) => {
 
       const followedIds = new Set(followeds.map((f) => f.followedId));
 
-      result.forEach((user) => {
+      users.forEach((user) => {
         user.setDataValue("isFollowed", followedIds.has(user.id));
       });
-    } else if (result && result.id) {
-      const followed = await Follow.findOne({
-        where: {
-          followerId: userId,
-          followedId: result.id,
-        },
-      });
-
-      result.setDataValue("isFollowed", !!followed);
     }
   });
 

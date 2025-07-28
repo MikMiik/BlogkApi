@@ -175,31 +175,20 @@ module.exports = (sequelize, DataTypes) => {
       post.slug = slug;
     }
   });
-
-  // Handle isliked
+  // Handle isliked and isBookmarked
   Post.addHook("afterFind", async (result, options) => {
     if (options?.skipHandleIsLiked) return;
     const userId = getCurrentUser();
 
-    const { Like } = sequelize.models;
+    const { Like, Bookmark } = sequelize.models;
 
+    const posts = Array.isArray(result) ? result : result ? [result] : [];
+    if (posts.length === 0) return;
     if (!userId) {
-      if (result && result.posts && Array.isArray(result.posts)) {
-        result.posts.forEach((post) => {
-          post.setDataValue("isLiked", false);
-        });
-      } else if (Array.isArray(result)) {
-        result.forEach((post) => {
-          post.setDataValue("isLiked", false);
-        });
-      } else if (result && result.id) {
-        result.setDataValue("isLiked", false);
-      }
-      return;
-    }
-
-    if (result && result.posts && Array.isArray(result.posts)) {
-      const postIds = result.posts.map((post) => post.id);
+      posts.forEach((p) => p.setDataValue("isLiked", false));
+      posts.forEach((p) => p.setDataValue("isBookmarked", false));
+    } else {
+      const postIds = posts.map((p) => p.id);
 
       const likes = await Like.findAll({
         where: {
@@ -208,60 +197,6 @@ module.exports = (sequelize, DataTypes) => {
           likableId: postIds,
         },
       });
-
-      const likedIds = new Set(likes.map((l) => l.likableId));
-
-      result.posts.forEach((post) => {
-        post.setDataValue("isLiked", likedIds.has(post.id));
-      });
-    } else if (Array.isArray(result)) {
-      const postIds = result.map((post) => post.id);
-
-      const likes = await Like.findAll({
-        where: {
-          userId,
-          likableType: "Post",
-          likableId: postIds,
-        },
-      });
-      const likedIds = new Set(likes.map((l) => l.likableId));
-
-      result.forEach((post) => {
-        post.setDataValue("isLiked", likedIds.has(post.id));
-      });
-    } else if (result && result.id) {
-      const like = await Like.findOne({
-        where: {
-          userId,
-          likableType: "Post",
-          likableId: result.id,
-        },
-      });
-
-      result.setDataValue("isLiked", !!like);
-    }
-  });
-
-  // Handle isbookmarked
-  Post.addHook("afterFind", async (result, options) => {
-    if (options?.skipHandleIsBookmarked) return;
-    const userId = getCurrentUser();
-    const { Bookmark } = sequelize.models;
-
-    if (!userId) {
-      if (Array.isArray(result)) {
-        result.forEach((post) => {
-          post.setDataValue("isBookmarked", false);
-        });
-      } else if (result && result.id) {
-        result.setDataValue("isBookmarked", false);
-      }
-      return;
-    }
-
-    // Có userId → xử lý như thường
-    if (Array.isArray(result)) {
-      const postIds = result.map((post) => post.id);
 
       const bookmarks = await Bookmark.findAll({
         where: {
@@ -270,20 +205,13 @@ module.exports = (sequelize, DataTypes) => {
         },
       });
 
+      const likedIds = new Set(likes.map((l) => l.likableId));
       const bookmarkedIds = new Set(bookmarks.map((b) => b.postId));
 
-      result.forEach((post) => {
-        post.setDataValue("isBookmarked", bookmarkedIds.has(post.id));
+      posts.forEach((p) => {
+        p.setDataValue("isLiked", likedIds.has(p.id));
+        p.setDataValue("isBookmarked", bookmarkedIds.has(p.id));
       });
-    } else if (result && result.id) {
-      const bookmark = await Bookmark.findOne({
-        where: {
-          userId,
-          postId: result.id,
-        },
-      });
-
-      result.setDataValue("isBookmarked", !!bookmark);
     }
   });
 

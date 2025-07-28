@@ -8,13 +8,14 @@ async function checkAuth(req, res, next) {
       return next();
     }
     if (!authHeader) {
-      return res.error(401, { message: "Authorization header missing" });
+      return res.error(401, "Authorization header missing");
     }
     const parts = authHeader.split(" ");
     if (parts.length !== 2 || parts[0] !== "Bearer") {
-      return res.error(401, {
-        message: 'Invalid Authorization format. Format is "Bearer <token>"',
-      });
+      return res.error(
+        401,
+        'Invalid Authorization format. Format is "Bearer <token>"'
+      );
     }
     const token = parts[1];
 
