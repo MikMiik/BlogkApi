@@ -70,7 +70,14 @@ class ProfileService {
         {
           model: User,
           as: "author",
-          attributes: ["id", "firstName", "lastName", "name", "avatar"],
+          attributes: [
+            "id",
+            "firstName",
+            "lastName",
+            "name",
+            "username",
+            "avatar",
+          ],
         },
         {
           model: Topic,
