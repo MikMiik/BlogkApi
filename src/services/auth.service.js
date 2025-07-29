@@ -9,7 +9,6 @@ const buildTokenResponse = require("@/utils/buildTokenResponse");
 const generateClientUrl = require("@/utils/generateClientUrl");
 const userService = require("./user.service");
 const queue = require("@/utils/queue");
-const throw404 = require("@/utils/throw404");
 
 const register = async (data) => {
   const user = await userService.create({

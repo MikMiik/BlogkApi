@@ -510,6 +510,28 @@ class PostsService {
     const result = await post.destroy();
     return result;
   }
+
+  async searchPosts(search) {
+    if (!search) return [];
+    const posts = await Post.scope("onlyPublished").findAll({
+      where: {
+        [Op.or]: [
+          { title: { [Op.like]: `%${search}%` } },
+          { excerpt: { [Op.like]: `%${search}%` } },
+        ],
+      },
+      attributes: [
+        "id",
+        "title",
+        "slug",
+        "excerpt",
+        "thumbnail",
+        "publishedAt",
+      ],
+      limit: 10,
+    });
+    return posts;
+  }
 }
 
 module.exports = new PostsService();

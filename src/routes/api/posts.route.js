@@ -6,7 +6,9 @@ const handleUpload = require("@/middlewares/handleUpload");
 const postValidator = require("@/validators/post.validator");
 const ensureAsyncContext = require("@/utils/asyncHooks");
 
-// Posts
+// Search posts - đặt lên trên trước các route có :id
+router.get("/search", postController.searchPosts);
+
 router.get("/", postController.getList);
 router.get("/bookmarks", postController.getBookmarkList);
 router.get("/my-posts", postController.getOwnList);

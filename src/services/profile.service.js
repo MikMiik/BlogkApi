@@ -179,6 +179,22 @@ class ProfileService {
     await follow.destroy();
     return { message: "Unfollowed" };
   }
+
+  async searchUsers(search) {
+    if (!search) return [];
+    const users = await User.findAll({
+      where: {
+        [Op.or]: [
+          { username: { [Op.like]: `%${search}%` } },
+          { firstName: { [Op.like]: `%${search}%` } },
+          { lastName: { [Op.like]: `%${search}%` } },
+        ],
+      },
+      attributes: ["id", "username", "name", "firstName", "lastName", "avatar"],
+      limit: 10,
+    });
+    return users;
+  }
 }
 
 module.exports = new ProfileService();

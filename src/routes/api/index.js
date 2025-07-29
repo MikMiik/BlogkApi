@@ -10,6 +10,7 @@ const commentsRouter = require("./comments.route");
 const usersRouter = require("./users.route");
 const profilesRouter = require("./profiles.route");
 const messagesRouter = require("./messages.route");
+const conversationsRouter = require("./conversation.route");
 
 // router.use("/products", productsRouter);
 router.use("/auth", authRouter);
@@ -20,5 +21,6 @@ router.use("/comments", commentsRouter);
 router.use("/users", usersRouter);
 router.use("/profiles", profilesRouter);
 router.use("/messages", messagesRouter);
+router.use("/conversations", conversationsRouter);
 
 module.exports = router;

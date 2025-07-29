@@ -34,3 +34,9 @@ exports.update = async (req, res) => {
   });
   res.success(200, result);
 };
+
+exports.searchUsers = async (req, res) => {
+  const { search } = req.query;
+  const data = await profileService.searchUsers(search);
+  res.success(200, data);
+};

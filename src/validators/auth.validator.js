@@ -3,6 +3,7 @@ const { comparePassword } = require("@/utils/bcrytp");
 const sendUnverifiedUserEmail = require("@/utils/sendUnverifiedUserEmail");
 const handleValidationErrors = require("./handleValidationErrors");
 const userService = require("@/services/user.service");
+const { findValidRefreshToken } = require("@/services/refreshToken.service");
 
 exports.register = [
   checkSchema({

@@ -85,3 +85,10 @@ exports.remove = async (req, res) => {
   await postService.remove(id);
   res.success(204);
 };
+
+exports.searchPosts = async (req, res) => {
+  const { search } = req.query;
+
+  const data = await postService.searchPosts(search);
+  res.success(200, data);
+};

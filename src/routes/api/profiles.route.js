@@ -6,6 +6,8 @@ const profileValidator = require("@/validators/profile.validator");
 const handleUpload = require("@/middlewares/handleUpload");
 const ensureAsyncContext = require("@/utils/asyncHooks");
 
+router.get("/", profilesController.searchUsers);
+
 router.get("/:id/edit", profilesController.getOneToEdit);
 router.get("/:id", profilesController.getOne);
 router.post("/:username/follow", profilesController.follow);

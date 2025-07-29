@@ -2,18 +2,9 @@ const pusher = require("@/configs/pusher");
 const messageService = require("@/services/message.service");
 const throw404 = require("@/utils/throw404");
 
-exports.getAllConversations = async (req, res) => {
-  const data = await messageService.getAllConversations();
-  if (!data) throw404();
-  res.success(200, data);
-};
-
-exports.getConversation = async (req, res) => {
-  const { id } = req.params;
-
-  const data = await messageService.getConversationMessages({
-    conversationId: id,
-  });
+exports.getConversationMessages = async (req, res) => {
+  const { conversationId } = req.query;
+  const data = await messageService.getConversationMessages(conversationId);
   if (!data) throw404();
   res.success(200, data);
 };
@@ -30,9 +21,4 @@ exports.send = async (req, res) => {
     console.error("Pusher trigger error:", error);
     res.error(500, "Failed to send message");
   }
-};
-
-exports.create = async (req, res) => {
-  const data = await messageService.create(req.body);
-  res.success(200, data);
 };

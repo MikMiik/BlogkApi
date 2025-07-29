@@ -9,7 +9,7 @@ async function checkAuth(req, res, next) {
       return next();
     }
     const parts = authHeader?.split(" ");
-    if (parts.length !== 2 || parts[0] !== "Bearer") {
+    if (parts?.length !== 2 || parts[0] !== "Bearer") {
       return res.error(
         401,
         'Invalid Authorization format. Format is "Bearer <token>"'
