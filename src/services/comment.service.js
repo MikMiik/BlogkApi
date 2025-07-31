@@ -1,4 +1,4 @@
-const { Comment, User, Like } = require("@/models");
+const { Comment, User, Like, sequelize } = require("@/models");
 const getCurrentUser = require("@/utils/getCurrentUser");
 const { Op } = require("sequelize");
 class CommentsService {

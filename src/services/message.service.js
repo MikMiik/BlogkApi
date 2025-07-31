@@ -1,6 +1,13 @@
 const pusher = require("@/configs/pusher");
-const { Message, User, Conversation } = require("@/models");
+const {
+  Message,
+  User,
+  Conversation,
+  Conversation_Participant,
+  sequelize,
+} = require("@/models");
 const getCurrentUser = require("@/utils/getCurrentUser");
+const { Op } = require("sequelize");
 
 class MessageService {
   async getConversationMessages(conversationId) {
@@ -18,22 +25,51 @@ class MessageService {
   }
   async create({ conversationId, content }) {
     const userId = getCurrentUser();
-    const result = await Message.create({ userId, conversationId, content });
-    const message = await Message.findOne({
-      where: { id: result.id },
-      include: [
+    const message = await sequelize.transaction(async (t) => {
+      const result = await Message.create(
         {
-          model: User,
-          as: "author",
-          attributes: ["id", "avatar"],
+          userId,
+          conversationId,
+          content,
         },
-      ],
+        { transaction: t }
+      );
+
+      const fullMessage = await Message.findOne({
+        where: { id: result.id },
+        include: [
+          {
+            model: User,
+            as: "author",
+            attributes: ["id", "avatar"],
+          },
+        ],
+        transaction: t,
+      });
+
+      await Conversation.update(
+        { updatedAt: new Date() },
+        { where: { id: conversationId }, transaction: t }
+      );
+
+      await Conversation_Participant.increment(
+        { unreadCount: 1 },
+        {
+          where: {
+            conversationId,
+            userId: { [Op.ne]: userId },
+          },
+          transaction: t,
+        }
+      );
+
+      return fullMessage;
     });
-    await Conversation.update(
-      { updatedAt: new Date() },
-      { where: { id: conversationId } }
+    await pusher.trigger(
+      `conversation-${conversationId}`,
+      "new-message",
+      message
     );
-    pusher.trigger(`conversation-${conversationId}`, "new-message", message);
 
     return message;
   }

@@ -26,6 +26,11 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: DataTypes.NOW,
       },
 
+      unreadCount: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+
       createdAt: DataTypes.DATE,
 
       updatedAt: DataTypes.DATE,
