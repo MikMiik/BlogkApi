@@ -74,25 +74,78 @@ class CommentsService {
   }
 
   async likeComment(commentId) {
-    const userId = getCurrentUser();
-    await Like.create({ userId, likableId: commentId, likableType: "Comment" });
-    return { message: "Comment liked" };
+    try {
+      const userId = getCurrentUser();
+
+      await sequelize.transaction(async (t) => {
+        const existing = await Like.findOne({
+          where: { userId, likableId: commentId, likableType: "Comment" },
+          transaction: t,
+          lock: t.LOCK.UPDATE,
+        });
+
+        if (existing) {
+          throw new Error("You have already liked this comment");
+        }
+
+        await Like.create(
+          { userId, likableId: commentId, likableType: "Comment" },
+          { transaction: t }
+        );
+
+        await Comment.increment("likesCount", {
+          by: 1,
+          where: { id: commentId },
+          transaction: t,
+        });
+      });
+
+      return { message: "Comment liked" };
+    } catch (error) {
+      if (
+        error.name === "SequelizeUniqueConstraintError" ||
+        error.message === "You have already liked this comment"
+      ) {
+        return { message: error.message };
+      }
+      throw error;
+    }
   }
 
   async unlikeComment(commentId) {
-    const userId = getCurrentUser();
-    const like = await Like.findOne({
-      where: { userId, likableId: commentId, likableType: "Comment" },
-    });
-    if (!like) return { message: "Like not found" };
+    try {
+      const userId = getCurrentUser();
 
-    await like.destroy();
-    return { message: "Comment unliked" };
-  }
+      await sequelize.transaction(async (t) => {
+        const existing = await Like.findOne({
+          where: { userId, likableId: commentId, likableType: "Comment" },
+          transaction: t,
+          lock: t.LOCK.UPDATE,
+        });
 
-  async remove(id) {
-    const result = await Comment.destroy({ where: { id } });
-    return result;
+        if (!existing) {
+          throw new Error("You have not liked this comment yet");
+        }
+
+        await existing.destroy({ transaction: t });
+
+        await Comment.decrement("likesCount", {
+          by: 1,
+          where: { id: commentId },
+          transaction: t,
+        });
+      });
+
+      return { message: "Comment unliked" };
+    } catch (error) {
+      if (
+        error.name === "SequelizeUniqueConstraintError" ||
+        error.message === "You have not liked this comment yet"
+      ) {
+        return { message: error.message };
+      }
+      throw error;
+    }
   }
 }
 

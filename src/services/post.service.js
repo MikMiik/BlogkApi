@@ -7,6 +7,7 @@ const {
   Tag,
   Like,
   Bookmark,
+  sequelize,
 } = require("@/models");
 const getCurrentUser = require("@/utils/getCurrentUser");
 const handlePostTopic = require("@/utils/handlePostTopic");
@@ -45,6 +46,7 @@ class PostsService {
             "firstName",
             "lastName",
             "avatar",
+            "isFollowed",
             "website",
             "socials",
             "name",
@@ -138,6 +140,7 @@ class PostsService {
       attributes: [
         "id",
         "title",
+        "userId",
         "content",
         "status",
         "thumbnail",
@@ -161,31 +164,36 @@ class PostsService {
           through: { attributes: [] },
         },
         {
-          model: User,
-          as: "author",
-          attributes: [
-            "id",
-            "firstName",
-            "lastName",
-            "role",
-            "website",
-            "socials",
-            "avatar",
-            "username",
-            "name",
-            "introduction",
-            "postsCount",
-            "followersCount",
-            "followingCount",
-          ],
-        },
-        {
           model: Image,
           as: "images",
           attributes: ["url", "altText"],
         },
       ],
     });
+
+    if (post) {
+      const user = await User.findOne({
+        where: { id: post.userId },
+        attributes: [
+          "id",
+          "firstName",
+          "lastName",
+          "role",
+          "website",
+          "socials",
+          "avatar",
+          "username",
+          "name",
+          "introduction",
+          "postsCount",
+          "isFollowed",
+          "followersCount",
+          "followingCount",
+        ],
+      });
+
+      post.setDataValue("author", user);
+    }
 
     const { rows: comments, count: commentsCount } =
       await Comment.findAndCountAll({
@@ -435,24 +443,87 @@ class PostsService {
   }
 
   async likePost(postId) {
-    const userId = getCurrentUser();
-    await Like.create({ userId, likableId: postId, likableType: "Post" });
-    return { message: "Post liked" };
+    try {
+      const userId = getCurrentUser();
+
+      await sequelize.transaction(async (t) => {
+        const existing = await Like.findOne({
+          where: { userId, likableId: postId, likableType: "Post" },
+          transaction: t,
+          lock: t.LOCK.UPDATE,
+        });
+
+        if (existing) {
+          throw new Error("You have already liked this post");
+        }
+
+        await Like.create(
+          { userId, likableId: postId, likableType: "Post" },
+          { transaction: t }
+        );
+
+        await Post.increment("likesCount", {
+          by: 1,
+          where: { id: postId },
+          transaction: t,
+        });
+      });
+
+      return { message: "Post liked" };
+    } catch (error) {
+      if (
+        error.name === "SequelizeUniqueConstraintError" ||
+        error.message === "You have already liked this post"
+      ) {
+        return { message: error.message };
+      }
+      throw error;
+    }
   }
 
   async unlikePost(postId) {
-    const userId = getCurrentUser();
-    const like = await Like.findOne({
-      where: { userId, likableId: postId, likableType: "Post" },
-    });
-    if (!like) return { message: "Like not found" };
+    try {
+      const userId = getCurrentUser();
 
-    await like.destroy();
-    return { message: "Post unliked" };
+      await sequelize.transaction(async (t) => {
+        const like = await Like.findOne({
+          where: { userId, likableId: postId, likableType: "Post" },
+          transaction: t,
+          lock: t.LOCK.UPDATE,
+        });
+
+        if (!like) {
+          throw new Error("You have not liked this post yet");
+        }
+
+        await like.destroy({ transaction: t });
+
+        await Post.decrement("likesCount", {
+          by: 1,
+          where: { id: postId },
+          transaction: t,
+        });
+      });
+
+      return { message: "Post unliked" };
+    } catch (error) {
+      if (error.message === "You have not liked this post yet") {
+        return { message: error.message };
+      }
+      throw error;
+    }
   }
 
   async bookmarkPost(postId) {
     const userId = getCurrentUser();
+    const existingBookmark = await Bookmark.findOne({
+      where: { postId, userId },
+    });
+
+    if (existingBookmark) {
+      return { message: "Post already bookmarked" };
+    }
+
     await Bookmark.create({ postId, userId });
     return { message: "Post bookmarked" };
   }
@@ -462,22 +533,21 @@ class PostsService {
     const bookmark = await Bookmark.findOne({
       where: { postId, userId },
     });
-    if (!bookmark) return { message: "Bookmark not found" };
+
+    if (!bookmark) {
+      return { message: "Post not bookmarked" };
+    }
 
     await bookmark.destroy();
-    return { message: "Post unBookmarked" };
+    return { message: "Post unbookmarked" };
   }
 
   async clearBookmarks() {
     const userId = getCurrentUser();
-
-    const deletedCount = await Bookmark.destroy({
+    await Bookmark.destroy({
       where: { userId },
     });
-
-    return {
-      message: `Cleared ${deletedCount} bookmarks`,
-    };
+    return { message: "All bookmarks cleared" };
   }
 
   async publishPost(data) {

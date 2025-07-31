@@ -1,16 +1,11 @@
-const {
-  Conversation,
-  Message,
-  User,
-  Conversation_Participant,
-} = require("@/models");
+const pusher = require("@/configs/pusher");
+const { Message, User, Conversation } = require("@/models");
 const getCurrentUser = require("@/utils/getCurrentUser");
 
 class MessageService {
   async getConversationMessages(conversationId) {
     const messages = await Message.findAll({
       where: { conversationId },
-      attributes: ["id", "type", "content", "status", "createdAt", "updatedAt"],
       include: [
         {
           model: User,
@@ -21,14 +16,11 @@ class MessageService {
     });
     return messages;
   }
-  async create(data) {
+  async create({ conversationId, content }) {
     const userId = getCurrentUser();
-    const result = await Message.create({ senderId: userId, ...data });
+    const result = await Message.create({ userId, conversationId, content });
     const message = await Message.findOne({
-      where: {
-        id: result.id,
-      },
-      attributes: ["id", "type", "content", "status", "createdAt", "updatedAt"],
+      where: { id: result.id },
       include: [
         {
           model: User,
@@ -37,6 +29,12 @@ class MessageService {
         },
       ],
     });
+    await Conversation.update(
+      { updatedAt: new Date() },
+      { where: { id: conversationId } }
+    );
+    pusher.trigger(`conversation-${conversationId}`, "new-message", message);
+
     return message;
   }
 }

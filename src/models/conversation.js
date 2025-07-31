@@ -8,6 +8,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Conversation.hasMany(models.Message, {
         as: "messages",
+        foreignKey: "conversationId",
       });
 
       Conversation.belongsToMany(models.User, {
@@ -36,16 +37,6 @@ module.exports = (sequelize, DataTypes) => {
             (user) =>
               user.id !== creatorId && user.status === ("Active" || "Online")
           );
-        },
-      },
-
-      lastMessage: {
-        type: DataTypes.VIRTUAL,
-        get() {
-          return this.getDataValue("lastMessage");
-        },
-        set(value) {
-          this.setDataValue("lastMessage", value);
         },
       },
 
@@ -87,39 +78,7 @@ module.exports = (sequelize, DataTypes) => {
         : [];
     if (conversations.length === 0) return result;
 
-    // Lấy model Message từ sequelize.models
-    const Message = sequelize.models.Message;
-
-    // Lấy tất cả conversationId
-    const conversationIds = conversations.map((c) => c.id);
-
-    // Lấy message mới nhất cho mỗi conversation
-    const lastMessages = await Message.findAll({
-      where: { conversationId: conversationIds },
-      order: [
-        ["conversationId", "ASC"],
-        ["createdAt", "DESC"],
-      ],
-      attributes: ["content", "createdAt", "conversationId"],
-      raw: true,
-    });
-
-    // Map conversationId -> lastMessage
-    const lastMessageMap = {};
-    for (const msg of lastMessages) {
-      if (!lastMessageMap[msg.conversationId]) {
-        lastMessageMap[msg.conversationId] = {
-          content: msg.content,
-          createdAt: msg.createdAt,
-        };
-      }
-    }
-
     conversations.forEach((conv) => {
-      // Set lastMessage
-      conv.setDataValue("lastMessage", lastMessageMap[conv.id] || null);
-
-      // Set participant nếu là chat 2 người
       const participants = conv.getDataValue("participants") || [];
       if (participants.length === 2 && userId) {
         const other = participants.find((u) => u.id !== userId);

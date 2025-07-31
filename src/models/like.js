@@ -26,39 +26,34 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  Like.addHook("afterCreate", async (like, options) => {
-    if (like.likableType === "Post") {
-      const { Post } = sequelize.models;
-      await Post.increment("likesCount", {
-        by: 1,
-        where: { id: like.likableId },
-      });
-    }
-    if (like.likableType === "Comment") {
-      const { Comment } = sequelize.models;
-      await Comment.increment("likesCount", {
-        by: 1,
-        where: { id: like.likableId },
-      });
-    }
-  });
+  //   const modelMap = {
+  //     Post: sequelize.models.Post,
+  //     Comment: sequelize.models.Comment,
+  //   };
 
-  Like.addHook("afterDestroy", async (like, options) => {
-    if (like.likableType === "Post") {
-      const { Post } = sequelize.models;
-      await Post.decrement("likesCount", {
-        by: 1,
-        where: { id: like.likableId },
-      });
-    }
-    if (like.likableType === "Comment") {
-      const { Comment } = sequelize.models;
-      await Comment.decrement("likesCount", {
-        by: 1,
-        where: { id: like.likableId },
-      });
-    }
-  });
+  //   const Model = modelMap[like.likableType];
+  //   if (Model) {
+  //     await Model.increment("likesCount", {
+  //       by: 1,
+  //       where: { id: like.likableId },
+  //     });
+  //   }
+  // });
+
+  // Like.addHook("afterDestroy", async (like, options) => {
+  //   const modelMap = {
+  //     Post: sequelize.models.Post,
+  //     Comment: sequelize.models.Comment,
+  //   };
+
+  //   const Model = modelMap[like.likableType];
+  //   if (Model) {
+  //     await Model.decrement("likesCount", {
+  //       by: 1,
+  //       where: { id: like.likableId },
+  //     });
+  //   }
+  // });
 
   return Like;
 };
