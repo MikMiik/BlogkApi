@@ -10,7 +10,6 @@ const publicPaths = [
   { path: "/topics", method: "get", startsWith: true },
   { path: "/profiles", method: "get", exact: true },
   { path: "/profiles/:id", method: "get", startsWith: true, pattern: true },
-  { path: "/uploads", method: "get", startsWith: true },
 ];
 
 function isPublicRoute(path, method) {

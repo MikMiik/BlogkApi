@@ -7,6 +7,7 @@ const app = express();
 const port = 3000;
 const { sequelize } = require("@/models");
 const { domain } = require("@/configs");
+const path = require("path");
 
 // RouterImport
 const router = require("@/routes/api/index");
@@ -39,6 +40,9 @@ app.use(
 );
 app.set("trust proxy", true);
 app.use(express.static("public"));
+app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
+app.use("/favicon", express.static(path.join(__dirname, "public/favicon")));
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(express.urlencoded());
 app.use(cookieParser());
