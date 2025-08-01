@@ -8,11 +8,13 @@ exports.getList = async (req, res) => {
 };
 
 exports.getOne = async (req, res) => {
-  const { page, limit } = req.query;
+  const { page = 1, limit = 10 } = req.query;
+  const pageNum = isNaN(+page) ? 1 : +page;
+  const limitNum = isNaN(+limit) ? 10 : +limit;
   const data = await topicService.getById({
     idOrSlug: req.params.id,
-    page: +page,
-    limit: +limit,
+    page: pageNum,
+    limit: limitNum,
   });
   if (!data) throw404();
   res.success(200, data);

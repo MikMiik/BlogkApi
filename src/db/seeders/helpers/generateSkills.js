@@ -8,7 +8,7 @@ faker.locale = "vi";
 async function generateSkills() {
   const skills = [
     {
-      name: "Tpyescript",
+      name: "TypeScript",
       createdAt: faker.date.between({
         from: "2024-01-01T00:00:00.000Z",
         to: "2025-07-11T00:00:00.000Z",

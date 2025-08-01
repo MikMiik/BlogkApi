@@ -9,7 +9,7 @@ async function generateImages(count = 100, options = {}) {
 
   for (let i = 0; i < count; i++) {
     const image = {
-      postID: faker.helpers.arrayElement(options.postIds),
+      postId: faker.helpers.arrayElement(options.postIds),
       url: `https://picsum.photos/seed/${i}/600/400`,
       altText: "postImage",
       createdAt: faker.date.between({

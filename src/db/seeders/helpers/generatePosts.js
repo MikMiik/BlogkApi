@@ -30,7 +30,6 @@ async function generatePosts(count = 100, options = {}) {
     const post = {
       userId: faker.helpers.arrayElement(options.userIds),
       title,
-      description: faker.lorem.sentence(3),
       slug: generateUniqueSlug(title, slugs),
       content,
       excerpt: getExcerptFromContent(content),
@@ -44,8 +43,6 @@ async function generatePosts(count = 100, options = {}) {
         "Followers only",
         "Only me",
       ]),
-      visibilityIcon:
-        "https://cdn-icons-png.flaticon.com/512/12708/12708511.png",
       allowComments: faker.datatype.boolean(0.5),
       viewsCount: faker.number.int({ min: 0, max: 10 }),
       likesCount: faker.number.int({ min: 0, max: 10 }),
