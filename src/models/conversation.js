@@ -23,9 +23,14 @@ module.exports = (sequelize, DataTypes) => {
     {
       name: DataTypes.STRING(50),
 
-      avatar: DataTypes.STRING(255),
+      type: {
+        type: DataTypes.STRING(50),
+        defaultValue: "private",
+      },
 
-      type: DataTypes.STRING(50),
+      creatorId: {
+        type: DataTypes.INTEGER,
+      },
 
       isOnline: {
         type: DataTypes.VIRTUAL,
@@ -66,6 +71,7 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "Conversation",
       tableName: "conversations",
       timestamps: true,
+      paranoid: true,
     }
   );
 

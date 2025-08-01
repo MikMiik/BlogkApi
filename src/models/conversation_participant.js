@@ -31,6 +31,17 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 0,
       },
 
+      isDeleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+
+      historyCutoff: {
+        type: DataTypes.DATE,
+      },
+
+      deletedAt: DataTypes.DATE,
+
       createdAt: DataTypes.DATE,
 
       updatedAt: DataTypes.DATE,
@@ -40,6 +51,14 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "Conversation_Participant",
       tableName: "conversation_participants",
       timestamps: true,
+      paranoid: true,
+      indexes: [
+        {
+          unique: true,
+          fields: ["conversationId", "userId"],
+          name: "unique_conversation_user",
+        },
+      ],
     }
   );
   return Conversation_Participant;
