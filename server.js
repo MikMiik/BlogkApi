@@ -43,6 +43,11 @@ app.use(express.static("public"));
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 app.use("/favicon", express.static(path.join(__dirname, "public/favicon")));
 app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  "/api/v1/uploads",
+  express.static(path.join(__dirname, "public/uploads"))
+);
+
 app.use(express.json());
 app.use(express.urlencoded());
 app.use(cookieParser());
