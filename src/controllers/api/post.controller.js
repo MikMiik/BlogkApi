@@ -1,3 +1,4 @@
+const { domain } = require("@/configs");
 const postService = require("@/services/post.service");
 
 exports.getList = async (req, res) => {

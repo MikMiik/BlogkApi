@@ -33,7 +33,7 @@ const { setContext } = require("@/middlewares/setContext");
 // Middleware
 app.use(
   cors({
-    origin: [domain.CLIENT_URL, "http://localhost:5173/"],
+    origin: [domain.CLIENT_URL],
     credentials: true,
   })
 );
