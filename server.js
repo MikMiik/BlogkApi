@@ -62,6 +62,14 @@ app.set("views", "./src/views");
 app.set("layout", "./layouts/default");
 
 // Router
+app.use(
+  "/api/v1/uploads",
+  express.static(path.join(__dirname, "public/uploads"))
+);
+app.use(
+  "/api/v1/favicon",
+  express.static(path.join(__dirname, "public/favicon"))
+);
 app.use("/api/v1", checkAuth, setContext, router);
 
 // ErrorHandle
