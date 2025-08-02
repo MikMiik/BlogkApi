@@ -6,8 +6,6 @@ const { session } = require("@/middlewares/setContext");
 
 class ProfileService {
   async getById({ id, page = 1, limit = 10 }) {
-    const userId = getCurrentUser();
-
     const offset = (page - 1) * limit;
 
     const user = await User.findOne({
@@ -51,7 +49,6 @@ class ProfileService {
       "onlyPublished"
     ).findAndCountAll({
       where: { userId: user.id },
-      userId,
       attributes: [
         "id",
         "title",
