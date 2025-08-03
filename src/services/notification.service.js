@@ -21,7 +21,6 @@ class NotificationService {
           as: "notification",
           attributes: [
             "id",
-            "type",
             "notifiableType",
             "notifiableId",
             "content",
@@ -137,6 +136,27 @@ class NotificationService {
     }
 
     return null;
+  }
+
+  async deleteNotification(notificationId) {
+    const userId = this.userId;
+
+    // Kiểm tra quyền xóa
+    const participant = await Notification_User.findOne({
+      where: { notificationId, userId },
+    });
+
+    if (!participant) {
+      throw new Error("You are not a participant of this notification");
+    }
+
+    await Notification.destroy({
+      where: {
+        id: notificationId,
+      },
+    });
+
+    return true;
   }
 }
 

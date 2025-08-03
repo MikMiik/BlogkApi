@@ -20,8 +20,6 @@ module.exports = (sequelize, DataTypes) => {
 
       notificationId: DataTypes.INTEGER,
 
-      type: DataTypes.STRING(191),
-
       createdAt: DataTypes.DATE,
 
       updatedAt: DataTypes.DATE,

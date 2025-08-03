@@ -4,5 +4,6 @@ const notificationController = require("@/controllers/api/notification.controlle
 
 router.post("/:notificationId/mark-as-read", notificationController.markAsRead);
 router.post("/mark-all-as-read", notificationController.markAllAsRead);
+router.delete("/:notificationId", notificationController.deleteNotification);
 
 module.exports = router;
