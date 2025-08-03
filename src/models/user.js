@@ -42,6 +42,13 @@ module.exports = (sequelize, DataTypes) => {
         as: "conversations",
       });
 
+      User.belongsToMany(models.Notification, {
+        through: "notification_user",
+        foreignKey: "userId",
+        otherKey: "notificationId",
+        as: "notifications",
+      });
+
       User.hasOne(models.Privacy, { foreignKey: "userId", as: "privacy" });
     }
   }

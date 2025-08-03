@@ -4,17 +4,23 @@ module.exports = (sequelize, DataTypes) => {
   class Notification_User extends Model {
     static associate(models) {
       // define association here
+      Notification_User.belongsTo(models.Notification, {
+        foreignKey: "notificationId",
+        as: "notification",
+      });
+      Notification_User.belongsTo(models.User, {
+        foreignKey: "userId",
+        as: "user",
+      });
     }
   }
   Notification_User.init(
     {
-      userId: DataTypes.INTEGER.UNSIGNED,
+      userId: DataTypes.INTEGER,
 
-      notificaitonId: DataTypes.INTEGER.UNSIGNED,
+      notificationId: DataTypes.INTEGER,
 
       type: DataTypes.STRING(191),
-
-      seenAt: DataTypes.DATE,
 
       createdAt: DataTypes.DATE,
 

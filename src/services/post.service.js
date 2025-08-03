@@ -11,9 +11,14 @@ const {
 } = require("@/models");
 const getCurrentUser = require("@/utils/getCurrentUser");
 const handlePostTopic = require("@/utils/handlePostTopic");
-
 const { Op } = require("sequelize");
+const notificationService = require("./notification.service");
 class PostsService {
+  // Getter for current user ID - more concise
+  get userId() {
+    return getCurrentUser();
+  }
+
   async getAll(page = 1, limit = 10) {
     const offset = (page - 1) * limit;
 
@@ -317,10 +322,9 @@ class PostsService {
   }
 
   async getBookmarkPosts() {
-    const userId = getCurrentUser();
     const bookmarks = await Bookmark.findAll({
       where: {
-        userId,
+        userId: this.userId,
       },
     });
     const posts = await Post.findAll({
@@ -375,9 +379,8 @@ class PostsService {
   }
 
   async getOwnPosts() {
-    const userId = getCurrentUser();
     const { rows: posts, count } = await Post.unscoped().findAndCountAll({
-      where: { userId },
+      where: { userId: this.userId },
       order: [["createdAt", "DESC"]],
       attributes: [
         "id",
@@ -422,8 +425,7 @@ class PostsService {
   }
 
   async create(data) {
-    const userId = getCurrentUser();
-    const post = await Post.create({ ...data, userId });
+    const post = await Post.create({ ...data, userId: this.userId });
     return { message: "Create successfully", slug: post.slug };
   }
 
@@ -444,9 +446,19 @@ class PostsService {
 
   async likePost(postId) {
     try {
-      const userId = getCurrentUser();
-
+      const userId = this.userId;
       await sequelize.transaction(async (t) => {
+        const user = await User.findOne({
+          where: { id: userId },
+          attributes: ["id", "firstName", "lastName", "avatar", "name"],
+          transaction: t,
+        });
+
+        const post = await Post.findOne({
+          where: { id: postId },
+          attributes: ["userId"],
+          transaction: t,
+        });
         const existing = await Like.findOne({
           where: { userId, likableId: postId, likableType: "Post" },
           transaction: t,
@@ -457,7 +469,7 @@ class PostsService {
           throw new Error("You have already liked this post");
         }
 
-        await Like.create(
+        const like = await Like.create(
           { userId, likableId: postId, likableType: "Post" },
           { transaction: t }
         );
@@ -467,6 +479,18 @@ class PostsService {
           where: { id: postId },
           transaction: t,
         });
+        if (userId !== post.userId) {
+          await notificationService.createNotification({
+            data: {
+              type: "like",
+              notifiableType: like.likableType,
+              notifiableId: postId,
+              content: `${user.name} liked your post`,
+            },
+            userId: post.userId,
+            transaction: t,
+          });
+        }
       });
 
       return { message: "Post liked" };
@@ -483,7 +507,7 @@ class PostsService {
 
   async unlikePost(postId) {
     try {
-      const userId = getCurrentUser();
+      const userId = this.userId;
 
       await sequelize.transaction(async (t) => {
         const like = await Like.findOne({
@@ -515,23 +539,21 @@ class PostsService {
   }
 
   async bookmarkPost(postId) {
-    const userId = getCurrentUser();
     const existingBookmark = await Bookmark.findOne({
-      where: { postId, userId },
+      where: { postId, userId: this.userId },
     });
 
     if (existingBookmark) {
       return { message: "Post already bookmarked" };
     }
 
-    await Bookmark.create({ postId, userId });
+    await Bookmark.create({ postId, userId: this.userId });
     return { message: "Post bookmarked" };
   }
 
   async unBookmarkPost(postId) {
-    const userId = getCurrentUser();
     const bookmark = await Bookmark.findOne({
-      where: { postId, userId },
+      where: { postId, userId: this.userId },
     });
 
     if (!bookmark) {
@@ -543,16 +565,14 @@ class PostsService {
   }
 
   async clearBookmarks() {
-    const userId = getCurrentUser();
     await Bookmark.destroy({
-      where: { userId },
+      where: { userId: this.userId },
     });
     return { message: "All bookmarks cleared" };
   }
 
   async publishPost(data) {
     const { isScheduled, postId, publishDate, topics, ...body } = data;
-    const userId = getCurrentUser();
     if (postId) {
       await this.update(postId, body);
       await handlePostTopic({ postId, topicNames: JSON.parse(topics) });
@@ -564,7 +584,7 @@ class PostsService {
       body.publishedAt = new Date().toISOString();
     }
 
-    const res = await this.create({ ...body, userId });
+    const res = await this.create({ ...body });
 
     await handlePostTopic({
       postId: res.postId,

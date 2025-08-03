@@ -1,7 +1,13 @@
 const { Comment, User, Like, sequelize } = require("@/models");
 const getCurrentUser = require("@/utils/getCurrentUser");
 const { Op } = require("sequelize");
+const notificationService = require("./notification.service");
 class CommentsService {
+  // Getter for current user ID
+  get userId() {
+    return getCurrentUser();
+  }
+
   async getAll() {
     const comments = await Comment.findAll({
       attributes: [
@@ -75,9 +81,23 @@ class CommentsService {
 
   async likeComment(commentId) {
     try {
-      const userId = getCurrentUser();
+      const userId = this.userId;
 
       await sequelize.transaction(async (t) => {
+        // Get user info for notification
+        const user = await User.findOne({
+          where: { id: userId },
+          attributes: ["id", "firstName", "lastName", "avatar", "name"],
+          transaction: t,
+        });
+
+        // Get comment info to find the comment owner
+        const comment = await Comment.findOne({
+          where: { id: commentId },
+          attributes: ["userId"],
+          transaction: t,
+        });
+
         const existing = await Like.findOne({
           where: { userId, likableId: commentId, likableType: "Comment" },
           transaction: t,
@@ -88,7 +108,7 @@ class CommentsService {
           throw new Error("You have already liked this comment");
         }
 
-        await Like.create(
+        const like = await Like.create(
           { userId, likableId: commentId, likableType: "Comment" },
           { transaction: t }
         );
@@ -98,6 +118,20 @@ class CommentsService {
           where: { id: commentId },
           transaction: t,
         });
+
+        // Send notification if not liking own comment
+        if (userId !== comment.userId) {
+          await notificationService.createNotification({
+            data: {
+              type: "like",
+              notifiableType: like.likableType,
+              notifiableId: commentId,
+              content: `${user.name} liked your comment`,
+            },
+            userId: comment.userId,
+            transaction: t,
+          });
+        }
       });
 
       return { message: "Comment liked" };
@@ -114,7 +148,7 @@ class CommentsService {
 
   async unlikeComment(commentId) {
     try {
-      const userId = getCurrentUser();
+      const userId = this.userId;
 
       await sequelize.transaction(async (t) => {
         const existing = await Like.findOne({

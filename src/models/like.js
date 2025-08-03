@@ -26,34 +26,5 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  //   const modelMap = {
-  //     Post: sequelize.models.Post,
-  //     Comment: sequelize.models.Comment,
-  //   };
-
-  //   const Model = modelMap[like.likableType];
-  //   if (Model) {
-  //     await Model.increment("likesCount", {
-  //       by: 1,
-  //       where: { id: like.likableId },
-  //     });
-  //   }
-  // });
-
-  // Like.addHook("afterDestroy", async (like, options) => {
-  //   const modelMap = {
-  //     Post: sequelize.models.Post,
-  //     Comment: sequelize.models.Comment,
-  //   };
-
-  //   const Model = modelMap[like.likableType];
-  //   if (Model) {
-  //     await Model.decrement("likesCount", {
-  //       by: 1,
-  //       where: { id: like.likableId },
-  //     });
-  //   }
-  // });
-
   return Like;
 };

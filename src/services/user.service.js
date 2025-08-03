@@ -1,4 +1,4 @@
-const { User } = require("@/models");
+const { User, Notification } = require("@/models");
 const { Op } = require("sequelize");
 class UsersService {
   async getAll() {
@@ -22,7 +22,30 @@ class UsersService {
         "role",
         "status",
       ],
+      include: [
+        {
+          model: Notification,
+          as: "notifications",
+          attributes: [
+            "id",
+            "type",
+            "notifiableType",
+            "notifiableId",
+            "content",
+            "link",
+            "seenAt",
+            "createdAt",
+            "updatedAt",
+          ],
+        },
+      ],
+      // Với many-to-many relationship thông qua junction table,
+      // chúng ta cần đặt order ở level chính của query.
+      order: [
+        [{ model: Notification, as: "notifications" }, "createdAt", "DESC"],
+      ],
     });
+
     return user;
   }
   async getByEmail(email) {

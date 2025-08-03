@@ -1,10 +1,23 @@
-const { User, Achievement, Post, Topic, Privacy, Follow } = require("@/models");
+const {
+  User,
+  Achievement,
+  Post,
+  Topic,
+  Privacy,
+  Follow,
+  sequelize,
+} = require("@/models");
 const { Op } = require("sequelize");
 const userService = require("./user.service");
 const getCurrentUser = require("@/utils/getCurrentUser");
 const { session } = require("@/middlewares/setContext");
+const notificationService = require("./notification.service");
 
 class ProfileService {
+  // Getter for current user ID
+  get userId() {
+    return getCurrentUser();
+  }
   async getById({ id, page = 1, limit = 10 }) {
     const offset = (page - 1) * limit;
 
@@ -89,6 +102,7 @@ class ProfileService {
       offset,
       distinct: true,
     });
+
     return { user, posts, count };
   }
 
@@ -138,8 +152,7 @@ class ProfileService {
   }
 
   async editProfile({ data, files }) {
-    const userId = getCurrentUser();
-    console.log(session.get("userId"));
+    const userId = this.userId;
 
     try {
       if (files.avatar) {
@@ -166,22 +179,99 @@ class ProfileService {
   }
 
   async follow(username) {
-    const userId = getCurrentUser();
-    const user = await User.findOne({
-      where: { username },
-    });
-    await Follow.create({ followerId: userId, followedId: user.id });
-    return { message: "Followed" };
+    const userId = this.userId;
+
+    try {
+      // Check user exists first
+      const user = await User.findOne({
+        where: { username },
+        attributes: ["id", "firstName", "lastName", "name"],
+      });
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      if (userId === user.id) {
+        return { message: "Cannot follow yourself" };
+      }
+
+      // Check if already following
+      const existingFollow = await Follow.findOne({
+        where: { followerId: userId, followedId: user.id },
+      });
+
+      if (existingFollow) {
+        return { message: "Already following this user" };
+      }
+
+      // Create follow record
+      await Follow.create({ followerId: userId, followedId: user.id });
+
+      // Create notification asynchronously (fire and forget)
+      setImmediate(async () => {
+        try {
+          const follower = await User.findOne({
+            where: { id: userId },
+            attributes: ["id", "firstName", "lastName", "avatar", "name"],
+          });
+
+          if (follower) {
+            await notificationService.createNotification({
+              data: {
+                type: "follow",
+                notifiableType: "User",
+                notifiableId: userId,
+                content: `${follower.name} started following you`,
+              },
+              userId: user.id,
+            });
+          }
+        } catch (error) {
+          console.error("Error creating follow notification:", error);
+        }
+      });
+
+      return { message: "Followed" };
+    } catch (error) {
+      if (error.message === "User not found") {
+        throw error;
+      }
+      throw new Error(`Follow failed: ${error.message}`);
+    }
   }
 
   async unfollow(username) {
-    const userId = getCurrentUser();
-    const user = await User.findOne({ where: { username } });
-    const follow = await Follow.findOne({
-      where: { followerId: userId, followedId: user.id },
-    });
-    await follow.destroy();
-    return { message: "Unfollowed" };
+    const userId = this.userId;
+
+    try {
+      // Check user exists first
+      const user = await User.findOne({
+        where: { username },
+        attributes: ["id"],
+      });
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      // Find and delete follow record
+      const follow = await Follow.findOne({
+        where: { followerId: userId, followedId: user.id },
+      });
+
+      if (!follow) {
+        return { message: "Not following this user" };
+      }
+
+      await follow.destroy();
+      return { message: "Unfollowed" };
+    } catch (error) {
+      if (error.message === "User not found") {
+        throw error;
+      }
+      throw new Error(`Unfollow failed: ${error.message}`);
+    }
   }
 
   async searchUsers(search) {

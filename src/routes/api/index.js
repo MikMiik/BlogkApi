@@ -11,6 +11,7 @@ const usersRouter = require("./users.route");
 const profilesRouter = require("./profiles.route");
 const messagesRouter = require("./messages.route");
 const conversationsRouter = require("./conversation.route");
+const notificationsRouter = require("./notification.route");
 
 // router.use("/products", productsRouter);
 router.use("/auth", authRouter);
@@ -22,5 +23,6 @@ router.use("/users", usersRouter);
 router.use("/profiles", profilesRouter);
 router.use("/messages", messagesRouter);
 router.use("/conversations", conversationsRouter);
+router.use("/notifications", notificationsRouter);
 
 module.exports = router;
