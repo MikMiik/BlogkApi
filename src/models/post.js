@@ -215,6 +215,54 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
 
+  // Handle user settings filter (view counts, etc.)
+  Post.addHook("afterFind", async (result, options) => {
+    // Skip nếu là internal query hoặc edit mode
+    if (options?.skipSettingsFilter || options?.skipHandleIsLiked) return;
+
+    const currentUserId = getCurrentUser();
+    if (!currentUserId) return; // Không filter cho guest users
+
+    const posts = Array.isArray(result) ? result : result ? [result] : [];
+    if (posts.length === 0) return;
+
+    try {
+      // Import setting service dynamically để tránh circular dependency
+      const settingService = require("@/services/setting.service");
+
+      // Get unique author IDs
+      const authorIds = [
+        ...new Set(posts.map((p) => p.userId).filter(Boolean)),
+      ];
+      if (authorIds.length === 0) return;
+
+      // Batch query settings để optimize performance
+      const settingsMap = new Map();
+      await Promise.all(
+        authorIds.map(async (authorId) => {
+          const settings = await settingService.getUserSettings(authorId);
+          settingsMap.set(authorId, settings);
+        })
+      );
+
+      // Apply settings filter
+      posts.forEach((post) => {
+        if (!post.userId) return;
+
+        const authorSettings = settingsMap.get(post.userId);
+        if (!authorSettings) return;
+
+        // Hide view count if author doesn't allow and viewer is not the author
+        if (!authorSettings.showViewCounts && currentUserId !== post.userId) {
+          post.setDataValue("viewsCount", null);
+        }
+      });
+    } catch (error) {
+      // Log error but don't break the query
+      console.error("Error applying settings filter in Post hook:", error);
+    }
+  });
+
   // Increase postCount
   Post.addHook("afterCreate", async (post) => {
     if (post) {

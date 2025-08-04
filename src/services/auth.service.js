@@ -9,6 +9,7 @@ const buildTokenResponse = require("@/utils/buildTokenResponse");
 const generateClientUrl = require("@/utils/generateClientUrl");
 const userService = require("./user.service");
 const queue = require("@/utils/queue");
+const settingService = require("./setting.service");
 
 const register = async (data) => {
   const user = await userService.create({
@@ -17,6 +18,7 @@ const register = async (data) => {
   });
 
   sendUnverifiedUserEmail(user.id);
+  settingService.createDefaultSettings(user.id);
   return {
     message:
       "Registration successful. Please check your email to verify your account.",
@@ -88,6 +90,19 @@ const sendForgotEmail = async (email) => {
   }
 };
 
+const changeEmail = async ({ userId, newEmail }) => {
+  const user = await userService.getById(userId);
+  if (!user) {
+    throw new Error("User not found.");
+  }
+  const updatedUser = await userService.update(userId, {
+    email: newEmail,
+    verifiedAt: null,
+  });
+  sendUnverifiedUserEmail(userId);
+  return updatedUser;
+};
+
 module.exports = {
   register,
   login,
@@ -95,4 +110,5 @@ module.exports = {
   refreshAccessToken,
   logout,
   sendForgotEmail,
+  changeEmail,
 };

@@ -121,7 +121,7 @@ class CommentsService {
 
         // Send notification if not liking own comment
         if (userId !== comment.userId) {
-          await notificationService.createNotification({
+          const res = await notificationService.createNotification({
             data: {
               type: "like",
               notifiableType: like.likableType,
@@ -131,6 +131,7 @@ class CommentsService {
             userId: comment.userId,
             transaction: t,
           });
+          return res;
         }
       });
 

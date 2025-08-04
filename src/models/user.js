@@ -50,6 +50,7 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       User.hasOne(models.Privacy, { foreignKey: "userId", as: "privacy" });
+      User.hasOne(models.Setting, { foreignKey: "userId", as: "setting" });
     }
   }
   User.init(
@@ -122,6 +123,10 @@ module.exports = (sequelize, DataTypes) => {
         set(value) {
           this.setDataValue("isFollowed", value);
         },
+      },
+
+      canViewProfile: {
+        type: DataTypes.VIRTUAL,
       },
 
       postsCount: DataTypes.INTEGER,

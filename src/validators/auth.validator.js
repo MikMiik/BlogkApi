@@ -114,3 +114,28 @@ exports.refreshToken = [
   }),
   handleValidationErrors,
 ];
+
+exports.changeEmail = [
+  checkSchema({
+    newEmail: {
+      trim: true,
+      notEmpty: {
+        errorMessage: "Please enter your new email.",
+      },
+      isEmail: {
+        errorMessage: "Not a valid e-mail address.",
+      },
+      custom: {
+        options: async (value, { req }) => {
+          const user = await userService.getByEmail(value);
+          if (user) {
+            throw new Error(
+              "Registration error: This email has already existed"
+            );
+          }
+        },
+      },
+    },
+  }),
+  handleValidationErrors,
+];

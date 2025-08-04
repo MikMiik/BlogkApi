@@ -9,6 +9,9 @@ const { sequelize } = require("@/models");
 const { domain } = require("@/configs");
 const path = require("path");
 
+// Redis Import
+const redisClient = require("@/configs/redis");
+
 // RouterImport
 const router = require("@/routes/api/index");
 
@@ -68,15 +71,55 @@ app.use("/api/v1", checkAuth, setContext, router);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-(async () => {
+// Initialize connections
+const initializeConnections = async () => {
   try {
+    // Database connection
     await sequelize.authenticate();
-    console.log("Connection has been established successfully.");
-  } catch (error) {
-    console.error("Unable to connect to the database:", error);
-  }
-})();
+    console.log("✅ Database connection has been established successfully.");
 
-app.listen(port, () => {
-  console.log(`http://localhost:${port}/api/v1`);
+    // Redis connection
+    await redisClient.connect();
+  } catch (error) {
+    console.error("❌ Connection errors:", error);
+  }
+};
+
+// Graceful shutdown
+const gracefulShutdown = async () => {
+  console.log("\n🔄 Shutting down gracefully...");
+
+  try {
+    // Close Redis connection
+    await redisClient.disconnect();
+
+    // Close database connection
+    await sequelize.close();
+    console.log("✅ All connections closed successfully");
+
+    process.exit(0);
+  } catch (error) {
+    console.error("❌ Error during shutdown:", error);
+    process.exit(1);
+  }
+};
+
+// Handle shutdown signals
+process.on("SIGINT", gracefulShutdown);
+process.on("SIGTERM", gracefulShutdown);
+
+// Start server
+const startServer = async () => {
+  // Initialize all connections first
+  await initializeConnections();
+
+  // Then start HTTP server
+  app.listen(port, () => {
+    console.log(`🚀 Server running on http://localhost:${port}/api/v1`);
+  });
+};
+
+startServer().catch((error) => {
+  console.error("❌ Failed to start server:", error);
+  process.exit(1);
 });

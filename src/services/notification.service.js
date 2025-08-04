@@ -2,6 +2,7 @@ const pusher = require("@/configs/pusher");
 const { Notification_User, Notification, sequelize } = require("@/models");
 const getCurrentUser = require("@/utils/getCurrentUser");
 const generateNotificationLink = require("@/utils/generateNotificationLink");
+const settingService = require("./setting.service");
 
 class NotificationService {
   // Getter for current user ID
@@ -35,6 +36,14 @@ class NotificationService {
   }
 
   async createNotification({ data, userId, transaction }) {
+    const canReceive = await settingService.canReceiveNotification(
+      userId,
+      data.type
+    );
+    if (!canReceive) {
+      return { message: "Notification blocked by user settings" };
+    }
+
     // Generate link automatically
     const link = await generateNotificationLink(
       data.type,

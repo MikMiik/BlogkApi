@@ -8,6 +8,7 @@ const {
   Like,
   Bookmark,
   sequelize,
+  Setting,
 } = require("@/models");
 const getCurrentUser = require("@/utils/getCurrentUser");
 const handlePostTopic = require("@/utils/handlePostTopic");
@@ -41,6 +42,7 @@ class PostsService {
         "likesCount",
         "createdAt",
         "publishedAt",
+        "userId", // Required for settings filter
       ],
       include: [
         {
@@ -81,7 +83,7 @@ class PostsService {
         "viewsCount",
         "likesCount",
         "publishedAt",
-        "viewsCount",
+        "userId", // Required for settings filter
       ],
       include: [
         {
@@ -113,6 +115,7 @@ class PostsService {
         "viewsCount",
         "likesCount",
         "publishedAt",
+        "userId", // Required for settings filter
       ],
       include: [
         {
@@ -195,8 +198,17 @@ class PostsService {
           "followersCount",
           "followingCount",
         ],
+        include: [
+          {
+            model: Setting,
+            as: "setting",
+            attributes: ["allowComments", "showViewCounts"],
+          },
+        ],
       });
+      console.log(user);
 
+      // Attach user to post
       post.setDataValue("author", user);
     }
 
@@ -248,7 +260,7 @@ class PostsService {
           "viewsCount",
           "likesCount",
           "publishedAt",
-          "viewsCount",
+          "userId", // Required for settings filter
         ],
         include: [
           {
@@ -279,10 +291,16 @@ class PostsService {
       });
     }
 
-    return { post, relatedPosts, comments, commentsCount };
+    return {
+      post,
+      relatedPosts,
+      comments,
+      commentsCount,
+    };
   }
 
   async getPostToEdit(idOrSlug) {
+    // Skip settings filter for edit operations
     const post = await Post.unscoped().findOne({
       where: {
         [Op.or]: [{ id: idOrSlug }, { slug: idOrSlug }],
@@ -317,6 +335,7 @@ class PostsService {
           through: { attributes: [] },
         },
       ],
+      skipSettingsFilter: true, // Bypass settings filter for editing
     });
     return post;
   }
@@ -327,6 +346,7 @@ class PostsService {
         userId: this.userId,
       },
     });
+
     const posts = await Post.findAll({
       where: {
         id: bookmarks.map((bookmark) => bookmark.postId),
@@ -346,6 +366,7 @@ class PostsService {
         "likesCount",
         "publishedAt",
         "updatedAt",
+        "userId", // Required for settings filter
       ],
       include: [
         {
@@ -375,10 +396,12 @@ class PostsService {
         },
       ],
     });
+
     return posts;
   }
 
   async getOwnPosts() {
+    // Skip settings filter for own posts (user should see their own stats)
     const { rows: posts, count } = await Post.unscoped().findAndCountAll({
       where: { userId: this.userId },
       order: [["createdAt", "DESC"]],
@@ -417,6 +440,7 @@ class PostsService {
           through: { attributes: [] },
         },
       ],
+      skipSettingsFilter: true, // Owner should see all their stats
     });
 
     return {
@@ -425,6 +449,13 @@ class PostsService {
   }
 
   async create(data) {
+    const userId = this.userId;
+
+    if (!data.visibility) {
+      // Import setting service locally để tránh circular dependency
+      const settingService = require("./setting.service");
+      data.visibility = await settingService.getPostVisibilityFilter(userId);
+    }
     const post = await Post.create({ ...data, userId: this.userId });
     return { message: "Create successfully", slug: post.slug };
   }
@@ -480,7 +511,7 @@ class PostsService {
           transaction: t,
         });
         if (userId !== post.userId) {
-          await notificationService.createNotification({
+          const res = await notificationService.createNotification({
             data: {
               type: "like",
               notifiableType: like.likableType,
@@ -490,6 +521,7 @@ class PostsService {
             userId: post.userId,
             transaction: t,
           });
+          return res;
         }
       });
 

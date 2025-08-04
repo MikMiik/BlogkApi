@@ -1,4 +1,4 @@
-const { User, Notification } = require("@/models");
+const { User, Notification, Setting } = require("@/models");
 const { Op } = require("sequelize");
 class UsersService {
   async getAll() {
@@ -21,6 +21,29 @@ class UsersService {
         "avatar",
         "role",
         "status",
+        "verifiedAt",
+      ],
+    });
+
+    return user;
+  }
+
+  async getMe(id) {
+    const user = await User.findOne({
+      where: {
+        [Op.or]: [{ id }, { username: id }],
+      },
+      attributes: [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "username",
+        "name",
+        "avatar",
+        "role",
+        "status",
+        "verifiedAt",
       ],
       include: [
         {
@@ -37,6 +60,14 @@ class UsersService {
             "createdAt",
             "updatedAt",
           ],
+          through: {
+            attributes: [],
+          },
+        },
+        {
+          model: Setting,
+          as: "setting",
+          attributes: ["allowComments", "showViewCounts"],
         },
       ],
       // Với many-to-many relationship thông qua junction table,

@@ -12,6 +12,7 @@ const userService = require("./user.service");
 const getCurrentUser = require("@/utils/getCurrentUser");
 const { session } = require("@/middlewares/setContext");
 const notificationService = require("./notification.service");
+const settingService = require("./setting.service");
 
 class ProfileService {
   // Getter for current user ID
@@ -102,7 +103,11 @@ class ProfileService {
       offset,
       distinct: true,
     });
-
+    const canViewProfile = await settingService.canViewProfile(
+      user.id,
+      this.userId
+    );
+    user.setDataValue("canViewProfile", canViewProfile);
     return { user, posts, count };
   }
 
@@ -217,7 +222,7 @@ class ProfileService {
           });
 
           if (follower) {
-            await notificationService.createNotification({
+            const res = await notificationService.createNotification({
               data: {
                 type: "follow",
                 notifiableType: "User",
@@ -226,6 +231,8 @@ class ProfileService {
               },
               userId: user.id,
             });
+            return res;
+            p;
           }
         } catch (error) {
           console.error("Error creating follow notification:", error);

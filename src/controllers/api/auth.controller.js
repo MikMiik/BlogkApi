@@ -30,11 +30,22 @@ exports.register = async (req, res) => {
   }
 };
 
+exports.changeEmail = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { newEmail } = req.body;
+    const updatedUser = await authService.changeEmail({ userId, newEmail });
+    res.success(200, updatedUser);
+  } catch (error) {
+    res.error(400, error.message);
+  }
+};
+
 exports.me = async (req, res) => {
   try {
     const accessToken = req.headers?.authorization?.replace("Bearer ", "");
     const { userId } = await authService.checkUser(accessToken);
-    const user = await usersService.getById(userId);
+    const user = await usersService.getMe(userId);
     res.success(200, user);
   } catch (error) {
     res.error(401, error.message);
