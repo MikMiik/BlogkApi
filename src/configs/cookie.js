@@ -281,6 +281,7 @@ class CookieManager {
       "session_id",
       "remember_me",
       "user_preferences",
+      "viewed_posts",
     ];
 
     const cookiesToClear =
@@ -346,6 +347,79 @@ class CookieManager {
    */
   getLanguage(req) {
     return this.getCookie(req, "language");
+  }
+
+  /**
+   * Set viewed posts cookie
+   * @param {Object} res - Express response object
+   * @param {Array} postIds - Array of viewed post IDs
+   * @param {Object} customOptions - Custom cookie options
+   */
+  setViewedPosts(res, postIds, customOptions = {}) {
+    const options = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      ...customOptions,
+    };
+
+    // Limit to last 100 posts to prevent cookie size issues
+    const limitedPostIds = Array.isArray(postIds) ? postIds.slice(-100) : [];
+
+    const value = JSON.stringify(limitedPostIds);
+    return this.setCookie(res, "viewed_posts", value, options);
+  }
+
+  /**
+   * Get viewed posts from cookie
+   * @param {Object} req - Express request object
+   * @returns {Array} Array of viewed post IDs
+   */
+  getViewedPosts(req) {
+    try {
+      const value = this.getCookie(req, "viewed_posts");
+      return value ? JSON.parse(value) : [];
+    } catch (error) {
+      console.error("❌ Error parsing viewed posts cookie:", error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Add a post to viewed posts cookie
+   * @param {Object} res - Express response object
+   * @param {Object} req - Express request object
+   * @param {string} postId - Post ID to add
+   */
+  addViewedPost(res, req, postId) {
+    const viewedPosts = this.getViewedPosts(req);
+
+    if (!viewedPosts.includes(postId)) {
+      viewedPosts.push(postId);
+      this.setViewedPosts(res, viewedPosts);
+    }
+
+    return viewedPosts;
+  }
+
+  /**
+   * Check if a post has been viewed
+   * @param {Object} req - Express request object
+   * @param {string} postId - Post ID to check
+   * @returns {boolean} True if post has been viewed
+   */
+  hasViewedPost(req, postId) {
+    const viewedPosts = this.getViewedPosts(req);
+    return viewedPosts.includes(postId);
+  }
+
+  /**
+   * Clear viewed posts cookie
+   * @param {Object} res - Express response object
+   */
+  clearViewedPosts(res) {
+    return this.clearCookie(res, "viewed_posts");
   }
 
   /**

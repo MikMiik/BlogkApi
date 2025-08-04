@@ -5,6 +5,7 @@ const postController = require("@/controllers/api/post.controller");
 const handleUpload = require("@/middlewares/handleUpload");
 const postValidator = require("@/validators/post.validator");
 const ensureAsyncContext = require("@/utils/asyncHooks");
+const trackPostView = require("@/middlewares/trackPostView");
 
 // Search posts - đặt lên trên trước các route có :id
 router.get("/search", postController.searchPosts);
@@ -35,7 +36,7 @@ router.delete("/:id/unlike", postController.unlikeOne);
 router.post("/:id/bookmark", postController.bookmarkOne);
 router.delete("/:id/unbookmark", postController.unBookmarkOne);
 router.delete("/clear-bookmarks", postController.clearBookmarks);
-router.get("/:id", postController.getOne);
+router.get("/:id", trackPostView, postController.getOne);
 router.delete("/:id", postController.remove);
 
 module.exports = router;

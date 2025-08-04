@@ -14,6 +14,7 @@ const getCurrentUser = require("@/utils/getCurrentUser");
 const handlePostTopic = require("@/utils/handlePostTopic");
 const { Op } = require("sequelize");
 const notificationService = require("./notification.service");
+const cookieManager = require("@/configs/cookie");
 class PostsService {
   // Getter for current user ID - more concise
   get userId() {
@@ -206,7 +207,6 @@ class PostsService {
           },
         ],
       });
-      console.log(user);
 
       // Attach user to post
       post.setDataValue("author", user);

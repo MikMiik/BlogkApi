@@ -179,6 +179,21 @@ class RedisClient {
     }
   }
 
+  async incr(key) {
+    if (!this.isReady()) {
+      console.warn("⚠️ Redis not ready, skipping INCR for key:", key);
+      return 0;
+    }
+
+    try {
+      const result = await this.client.incr(key);
+      return result;
+    } catch (error) {
+      console.error("❌ Redis INCR error:", error.message);
+      return 0;
+    }
+  }
+
   // Pattern để delete nhiều keys cùng lúc
   async deletePattern(pattern) {
     if (!this.isReady()) {

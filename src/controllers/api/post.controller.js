@@ -1,4 +1,5 @@
 const postService = require("@/services/post.service");
+const redisClient = require("@/configs/redis");
 
 exports.getList = async (req, res) => {
   const { limit = 10, page = 1 } = req.query;
@@ -21,6 +22,26 @@ exports.getOwnList = async (req, res) => {
 exports.getOne = async (req, res) => {
   const { id } = req.params;
   const data = await postService.getById(id);
+
+  // Get current view count from Redis if available
+  if (data.post) {
+    try {
+      const viewCountKey = `post:${id}:views`;
+      const redisViewCount = await redisClient.get(viewCountKey);
+
+      if (redisViewCount) {
+        // Use Redis count if available (more up-to-date)
+        data.post.viewsCount = parseInt(redisViewCount);
+      }
+
+      // Add view tracking info to response
+      data.isNewView = req.isNewView || false;
+    } catch (error) {
+      console.error("❌ Error getting view count from Redis:", error.message);
+      // Fallback to database count
+    }
+  }
+
   res.success(200, data);
 };
 
