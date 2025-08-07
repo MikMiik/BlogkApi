@@ -14,6 +14,11 @@ router.post(
 router.post("/logout", authValidator.refreshToken, authController.logout);
 router.get("/verify-email", authController.verifyEmail);
 router.post("/reset-password", authController.resetPassword);
+router.post(
+  "/change-password/:userId",
+  authValidator.changePassword,
+  authController.changePassword
+);
 router.post("/forgot-password", authController.sendForgotEmail);
 router.get("/verify-reset-token", authController.verifyResetToken);
 router.post(

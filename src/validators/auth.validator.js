@@ -1,9 +1,10 @@
 const { checkSchema } = require("express-validator");
-const { comparePassword } = require("@/utils/bcrytp");
+const { comparePassword, hashPassword } = require("@/utils/bcrytp");
 const sendUnverifiedUserEmail = require("@/utils/sendUnverifiedUserEmail");
 const handleValidationErrors = require("./handleValidationErrors");
 const userService = require("@/services/user.service");
 const { findValidRefreshToken } = require("@/services/refreshToken.service");
+const { User } = require("@/models");
 
 exports.register = [
   checkSchema({
@@ -134,6 +135,35 @@ exports.changeEmail = [
             );
           }
         },
+      },
+    },
+  }),
+  handleValidationErrors,
+];
+
+exports.changePassword = [
+  checkSchema({
+    currentPassword: {
+      notEmpty: {
+        errorMessage: "Current password is required",
+      },
+    },
+    newPassword: {
+      notEmpty: {
+        errorMessage: "New password is required",
+      },
+      isStrongPassword: {
+        errorMessage:
+          "New password must contain at least 8 characters, including uppercase, lowercase, number, and symbol.",
+      },
+    },
+    confirmPassword: {
+      notEmpty: {
+        errorMessage: "Confirm password is required",
+      },
+      custom: {
+        options: async (value, { req }) => value === req.body.newPassword,
+        errorMessage: "Passwords do not match",
       },
     },
   }),

@@ -9,7 +9,7 @@ const handleValidationErrors = async (req, res, next) => {
   const formatted = errors.array({
     onlyFirstError: true,
   })[0]?.msg;
-  res.error(401, formatted);
+  return res.error(401, formatted);
 };
 
 module.exports = handleValidationErrors;

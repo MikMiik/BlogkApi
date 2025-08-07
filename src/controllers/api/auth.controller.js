@@ -41,6 +41,20 @@ exports.changeEmail = async (req, res) => {
   }
 };
 
+exports.changePassword = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { currentPassword, newPassword } = req.body;
+    const result = await authService.changePassword(userId, {
+      currentPassword,
+      newPassword,
+    });
+    res.success(200, result);
+  } catch (error) {
+    res.error(401, error.message);
+  }
+};
+
 exports.me = async (req, res) => {
   try {
     const accessToken = req.headers?.authorization?.replace("Bearer ", "");

@@ -43,8 +43,8 @@ app.use(
 );
 app.set("trust proxy", true);
 app.use(express.static("public"));
-app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
-app.use("/favicon", express.static(path.join(__dirname, "public/favicon")));
+// app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
+// app.use("/favicon", express.static(path.join(__dirname, "public/favicon")));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(
   "/api/v1/uploads",

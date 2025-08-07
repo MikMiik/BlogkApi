@@ -1,4 +1,4 @@
-const { hashPassword } = require("@/utils/bcrytp");
+const { hashPassword, comparePassword } = require("@/utils/bcrytp");
 const { verifyAccessToken, generateMailToken } = require("./jwt.service");
 const {
   findValidRefreshToken,
@@ -10,6 +10,7 @@ const generateClientUrl = require("@/utils/generateClientUrl");
 const userService = require("./user.service");
 const queue = require("@/utils/queue");
 const settingService = require("./setting.service");
+const { User } = require("@/models");
 
 const register = async (data) => {
   const user = await userService.create({
@@ -103,6 +104,40 @@ const changeEmail = async ({ userId, newEmail }) => {
   return updatedUser;
 };
 
+const changePassword = async (userId, data) => {
+  const user = await User.findOne({
+    where: { id: userId },
+    hooks: false,
+    attributes: ["password"],
+  });
+
+  if (!user) {
+    throw new Error("User not found.");
+  }
+
+  if (!data.currentPassword) {
+    throw new Error("Current password is required");
+  }
+
+  if (!user.password) {
+    throw new Error("User stored password not found");
+  }
+
+  const isPasswordMatch = await comparePassword(
+    data.currentPassword,
+    user.password
+  );
+
+  if (!isPasswordMatch) {
+    throw new Error("Current password is incorrect");
+  }
+
+  const updatedUser = await userService.update(userId, {
+    password: await hashPassword(data.newPassword),
+  });
+  return updatedUser;
+};
+
 module.exports = {
   register,
   login,
@@ -111,4 +146,5 @@ module.exports = {
   logout,
   sendForgotEmail,
   changeEmail,
+  changePassword,
 };
