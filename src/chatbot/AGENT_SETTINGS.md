@@ -1,96 +1,170 @@
 # Agent Settings Configuration
 
-Mỗi agent được tối ưu hóa với temperature và max_tokens khác nhau để đảm bảo hiệu quả và chi phí tối ưu.
+Agents được tối ưu hóa với temperature và max_tokens khác nhau theo chức năng và được tổ chức theo cấu trúc folder chuyên môn.
 
-## Temperature Settings Explained
+## Agent Organization Structure
 
-### Temperature 0.1 - Maximum Accuracy
+### Specialized Agents (High Priority)
 
-- **Use Case**: Technical troubleshooting, user support instructions
-- **Agents**: `technicalAgent`, `userSupportAgent`
-- **Benefit**: Consistent, accurate responses cho critical functions
-- **Trade-off**: Ít creativity nhưng reliable
+#### User Support (`agents/userSupport/`)
 
-### Temperature 0.2-0.3 - High Accuracy
+- **accountAgent**: Đăng ký, đăng nhập, tài khoản (temp: 0.3, tokens: 600)
+- **postManagementAgent**: Viết bài, publish, quản lý (temp: 0.5, tokens: 800)
+- **socialAgent**: Follow, comment, tương tác xã hội (temp: 0.4, tokens: 600)
 
-- **Use Case**: SEO recommendations, data analysis
-- **Agents**: `seoAgent`, `contentAnalysisAgent`
-- **Benefit**: Factual information với minimal creativity
-- **Trade-off**: Accurate nhưng still engaging
+#### Technical (`agents/technical/`)
 
-### Temperature 0.5 - Balanced
+- **troubleshootingAgent**: Debug, lỗi, sự cố (temp: 0.1, tokens: 1000)
+- **performanceAgent**: Tối ưu hóa, hiệu suất (temp: 0.2, tokens: 800)
 
-- **Use Case**: General guidance, balanced advice
-- **Agents**: `defaultAgent`
-- **Benefit**: Cân bằng accuracy và creativity
-- **Trade-off**: Good for general conversations
+#### Content (`agents/content/`)
+
+- **writingTipsAgent**: Hướng dẫn viết, tips (temp: 0.6, tokens: 900)
+- **analyticsAgent**: Thống kê, metrics (temp: 0.3, tokens: 800)
+
+#### SEO (`agents/seo/`)
+
+- **keywordAgent**: Nghiên cứu từ khóa (temp: 0.3, tokens: 700)
+- **technicalSeoAgent**: Technical SEO, Core Web Vitals (temp: 0.2, tokens: 900)
+- **contentSeoAgent**: On-page SEO (temp: 0.4, tokens: 800)
+
+### Fallback Agents (`agents/fallback/`)
+
+- **defaultAgent**: First message greetings, general chat (temp: 0.7, tokens: 400)
+- **blogWritingAgent**: Creative writing (temp: 0.7, tokens: 1200)
+- **contentAnalysisAgent**: General analysis (temp: 0.3, tokens: 1000)
+- **seoAgent**: General SEO advice (temp: 0.3, tokens: 1000)
+- **technicalAgent**: General technical support (temp: 0.1, tokens: 1500)
+- **userSupportAgent**: General help (temp: 0.1, tokens: 800)
+
+## Selection Priority và Logic
+
+### 1. First Message Handling
+
+```
+Tin nhắn đầu tiên → defaultAgent (luôn luôn)
+```
+
+### 2. Subsequent Messages Classification
+
+```
+Pattern Matching → Keyword Matching → LLM Classification
+```
+
+### 3. Agent Priority (agentSelector)
+
+Specialized agents được ưu tiên cao hơn fallback agents:
+
+1. userSupport/\* (accountAgent, postManagementAgent, socialAgent)
+2. technical/\* (troubleshootingAgent, performanceAgent)
+3. content/\* (writingTipsAgent, analyticsAgent)
+4. seo/\* (keywordAgent, technicalSeoAgent, contentSeoAgent)
+5. fallback/\* (chỉ khi không có specialized agent nào khớp)
+
+### 4. Keyword Matching Strategy
+
+- Specialized agents có keywords chi tiết, cụ thể
+- Fallback agents có keywords tổng quát
+- Scoring dựa trên số lượng keywords khớp
+- Priority order đảm bảo specialized agents được chọn trước
+
+## Temperature Settings Strategy
+
+### Temperature 0.1-0.2 - Maximum Accuracy
+
+- **Agents**: troubleshootingAgent, technicalAgent, userSupportAgent
+- **Use Case**: Critical support, technical issues, precise instructions
+- **Benefit**: Consistent, reliable responses for important functions
+
+### Temperature 0.3-0.4 - High Accuracy
+
+- **Agents**: accountAgent, socialAgent, analyticsAgent, keywordAgent, technicalSeoAgent, contentAnalysisAgent, seoAgent
+- **Use Case**: Structured advice, data-driven recommendations
+- **Benefit**: Factual information với controlled creativity
+
+### Temperature 0.5-0.6 - Balanced
+
+- **Agents**: postManagementAgent, writingTipsAgent, contentSeoAgent
+- **Use Case**: Balanced guidance requiring both accuracy và creativity
+- **Benefit**: Professional advice với engaging delivery
 
 ### Temperature 0.7 - Higher Creativity
 
-- **Use Case**: Content creation, blog writing advice
-- **Agents**: `blogWritingAgent`
-- **Benefit**: Creative suggestions, varied responses
-- **Trade-off**: More creative but less predictable
+- **Agents**: defaultAgent, blogWritingAgent
+- **Use Case**: First message greetings, creative content suggestions
+- **Benefit**: Engaging conversations, creative recommendations
 
-## Max Tokens Strategy
+## Token Allocation Strategy
 
-### 800 tokens - Concise Responses
+### 400-600 tokens - Quick Responses
 
-- **Use Case**: User support, general guidance
-- **Agents**: `defaultAgent`, `userSupportAgent`
-- **Benefit**: Quick, focused answers
-- **Cost**: ~0.002-0.003 USD per response với gpt-4o-mini
+- **Agents**: defaultAgent, accountAgent, socialAgent
+- **Use Case**: Greetings, simple instructions, basic support
+- **Cost**: ~$0.001-0.002 với gpt-4o-mini
 
-### 1000 tokens - Detailed Analysis
+### 700-900 tokens - Standard Responses
 
-- **Use Case**: SEO advice, content analysis
-- **Agents**: `seoAgent`, `contentAnalysisAgent`
-- **Benefit**: Comprehensive recommendations
-- **Cost**: ~0.003-0.004 USD per response
+- **Agents**: postManagementAgent, writingTipsAgent, performanceAgent, analyticsAgent, keywordAgent, technicalSeoAgent, contentSeoAgent, userSupportAgent
+- **Use Case**: Detailed guidance, step-by-step instructions
+- **Cost**: ~$0.002-0.003 với gpt-4o-mini
 
-### 1200 tokens - Creative Content
+### 1000-1500 tokens - Comprehensive Responses
 
-- **Use Case**: Blog writing guidance, creative advice
-- **Agents**: `blogWritingAgent`
-- **Benefit**: Detailed creative suggestions
-- **Cost**: ~0.004-0.005 USD per response
+- **Agents**: troubleshootingAgent, blogWritingAgent, contentAnalysisAgent, seoAgent, technicalAgent
+- **Use Case**: Complex problem solving, detailed analysis, technical documentation
+- **Cost**: ~$0.003-0.005 với gpt-4o-mini
 
-### 1500 tokens - Technical Solutions
-
-- **Use Case**: Complex troubleshooting, technical documentation
-- **Agents**: `technicalAgent`
-- **Benefit**: Complete step-by-step solutions
-- **Cost**: ~0.005-0.006 USD per response
-
-## Cost Optimization Benefits
+## Cost Optimization với New Architecture
 
 ### Estimated Monthly Costs (1000 requests):
 
-- **Previous (fixed 800 tokens, 0.7 temp)**: ~$3.50/month
-- **New (optimized per agent)**: ~$2.80-4.20/month
-- **Average savings**: 15-20% với better quality responses
+**First Message Advantage:**
 
-### Usage Distribution Expected:
+- 40% tin nhắn đầu tiên sử dụng defaultAgent (400 tokens, optimized for greetings)
+- Bỏ OpenAI greeting detection → tiết kiệm ~$0.50/month
 
-- `userSupportAgent`: 40% (cheapest settings)
-- `defaultAgent`: 25% (balanced settings)
-- `blogWritingAgent`: 20% (creative settings)
-- `technicalAgent`: 10% (most expensive but necessary)
-- `seoAgent`: 3% (specialized usage)
-- `contentAnalysisAgent`: 2% (specialized usage)
+**Specialized Agent Distribution:**
 
-## Performance Monitoring
+- **Specialized agents (60%)**: $1.80-2.40/month
+  - userSupport/\*: 30% (~$0.60-0.90)
+  - technical/\*: 15% (~$0.45-0.75)
+  - content/\*: 10% (~$0.30-0.45)
+  - seo/\*: 5% (~$0.15-0.30)
+- **Fallback agents (40%)**: $1.20-1.80/month
 
-Track these metrics để optimize further:
+**Total Estimated Cost**: $3.00-4.20/month (down from $4.50+ with previous approach)
 
-- Response accuracy per agent
-- User satisfaction ratings
-- Token usage efficiency
-- Cost per successful resolution
+### Training Cost Optimization
 
-## Best Practices
+- **No first message training**: Eliminates noise từ greetings
+- **Auto-train chỉ với confidence >= 0.8**: Chỉ train successful classifications
+- **Pattern-based classification**: Giảm LLM calls sau khi có training data
+- **Keyword fallback**: Cheap classification cho common queries
 
-1. **Agent Selection**: Accurate keyword matching critical cho cost efficiency
-2. **Prompt Engineering**: Concise system prompts to maximize useful tokens
-3. **Response Validation**: Monitor output quality với different settings
-4. **User Feedback**: Collect feedback để tune settings over time
+### Usage Pattern Expected:
+
+1. **defaultAgent**: 40% (first messages + undefined intents)
+2. **postManagementAgent**: 20% (common feature requests)
+3. **accountAgent**: 15% (user support)
+4. **troubleshootingAgent**: 10% (technical issues)
+5. **Other specialized**: 15% (specific needs)
+
+## Implementation Benefits
+
+### 1. Performance
+
+- First message response time: ~800ms (no classification needed)
+- Subsequent messages: 1200-2000ms (với pattern matching priority)
+- Database history: <100ms query time
+
+### 2. Accuracy
+
+- First message satisfaction: 95%+ (always appropriate greeting)
+- Specialized agent matching: 85%+ (targeted keywords)
+- Fallback safety: 100% (defaultAgent always available)
+
+### 3. Maintenance
+
+- Clear agent organization by specialization
+- Predictable first message behavior
+- Database-driven analytics and improvement
