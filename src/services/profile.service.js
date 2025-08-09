@@ -167,6 +167,7 @@ class ProfileService {
         data.coverImage = `/uploads/${files.coverImage[0].filename}`;
       }
       const { privacy, socials, skills, ...body } = data;
+
       body.socials = JSON.parse(socials);
       body.skills = JSON.parse(skills);
       await userService.update(userId, {

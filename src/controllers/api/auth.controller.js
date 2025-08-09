@@ -47,20 +47,22 @@ exports.githubCallback = async (req, res) => {
       return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
     }
 
-    // Set cookies with tokens
+    // Set cookies with tokens - both accessible to client for localStorage transfer
     res.cookie("accessToken", data.accessToken, {
       httpOnly: false, // Client needs access
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 1000, // 1 hour
+      path: "/",
     });
 
     if (data.refreshToken) {
       res.cookie("refreshToken", data.refreshToken, {
-        httpOnly: true, // More secure, only server can access
+        httpOnly: false, // Allow client access for localStorage transfer
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        path: "/",
       });
     }
 
