@@ -34,6 +34,44 @@ exports.googleLogin = async (req, res) => {
   }
 };
 
+exports.githubCallback = async (req, res) => {
+  try {
+    const { code } = req.query;
+    if (!code) {
+      return res.redirect(`${process.env.CLIENT_URL}/login?error=no_code`);
+    }
+
+    const data = await authService.githubLogin(code);
+
+    if (!data) {
+      return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
+    }
+
+    // Set cookies with tokens
+    res.cookie("accessToken", data.accessToken, {
+      httpOnly: false, // Client needs access
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 1000, // 1 hour
+    });
+
+    if (data.refreshToken) {
+      res.cookie("refreshToken", data.refreshToken, {
+        httpOnly: true, // More secure, only server can access
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+    }
+
+    // Redirect to client login page
+    res.redirect(`${process.env.CLIENT_URL}/login?success=github_login`);
+  } catch (error) {
+    console.error("GitHub callback error:", error);
+    res.redirect(`${process.env.CLIENT_URL}/login?error=server_error`);
+  }
+};
+
 exports.register = async (req, res) => {
   let { confirmPassword, agreeToTerms, ...data } = req.body;
   try {

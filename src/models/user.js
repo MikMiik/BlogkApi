@@ -79,6 +79,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(255),
       },
 
+      githubId: {
+        type: DataTypes.STRING(255),
+      },
+
       birthday: DataTypes.DATE,
 
       introduction: DataTypes.STRING(255),
