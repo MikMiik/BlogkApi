@@ -4,6 +4,7 @@ const router = express.Router();
 const authValidator = require("@/validators/auth.validator");
 
 router.post("/login", authValidator.login, authController.login);
+router.post("/google", authController.googleLogin);
 router.post("/register", authValidator.register, authController.register);
 router.get("/me", authController.me);
 router.post(

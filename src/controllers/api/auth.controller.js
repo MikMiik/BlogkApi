@@ -3,6 +3,7 @@ const authService = require("@/services/auth.service");
 const {
   verifyMailToken,
   generateAccessToken,
+  verifyAccessToken,
 } = require("@/services/jwt.service");
 const { hashPassword } = require("@/utils/bcrytp");
 
@@ -15,6 +16,19 @@ exports.login = async (req, res) => {
     }))(req.body);
     const tokenData = await authService.login(data);
     res.success(200, tokenData);
+  } catch (error) {
+    res.error(401, error.message);
+  }
+};
+
+exports.googleLogin = async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.error(401, "No token provided");
+    }
+    const userData = await authService.googleLogin(token);
+    res.success(200, userData);
   } catch (error) {
     res.error(401, error.message);
   }

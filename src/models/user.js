@@ -59,7 +59,7 @@ module.exports = (sequelize, DataTypes) => {
 
       password: {
         type: DataTypes.STRING(191),
-        allowNull: false,
+        allowNull: true,
       },
 
       firstName: DataTypes.STRING(191),
@@ -74,6 +74,10 @@ module.exports = (sequelize, DataTypes) => {
       },
 
       username: { type: DataTypes.STRING(191), unique: true },
+
+      googleId: {
+        type: DataTypes.STRING(255),
+      },
 
       birthday: DataTypes.DATE,
 

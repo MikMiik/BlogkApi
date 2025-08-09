@@ -11,6 +11,7 @@ const userService = require("./user.service");
 const queue = require("@/utils/queue");
 const settingService = require("./setting.service");
 const { User } = require("@/models");
+const axios = require("axios");
 
 const register = async (data) => {
   const user = await userService.create({
@@ -138,6 +139,43 @@ const changePassword = async (userId, data) => {
   return updatedUser;
 };
 
+const googleLogin = async (token) => {
+  try {
+    const { data } = await axios.get(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (data && data.email_verified) {
+      const user = await userService.getByEmail(data.email);
+      if (!user) {
+        const newUser = await userService.create({
+          email: data.email,
+          firstName: data.given_name,
+          lastName: data.family_name,
+          avatar: data.picture,
+          googleId: await hashPassword(data.sub),
+          verifiedAt: new Date(),
+        });
+        settingService.createDefaultSettings(newUser.id);
+        return buildTokenResponse({ userId: newUser.id, rememberMe: true });
+      }
+      const result = await buildTokenResponse({
+        userId: user.id,
+        rememberMe: true,
+      });
+      await userService.update(user.id, { lastLogin: new Date() });
+      return result;
+    }
+  } catch (error) {
+    console.error("Error check tokens", error);
+    return null;
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -147,4 +185,5 @@ module.exports = {
   sendForgotEmail,
   changeEmail,
   changePassword,
+  googleLogin,
 };
