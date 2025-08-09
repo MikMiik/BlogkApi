@@ -456,7 +456,7 @@ class PostsService {
       data.visibility = await settingService.getPostVisibilityFilter(userId);
     }
     const post = await Post.create({ ...data, userId: this.userId });
-    return { message: "Create successfully", slug: post.slug };
+    return { message: "Create successfully", slug: post.slug, postId: post.id };
   }
 
   async editPost(idOrSlug, data) {
@@ -606,7 +606,8 @@ class PostsService {
     const { isScheduled, postId, publishDate, topics, ...body } = data;
     if (postId) {
       await this.update(postId, body);
-      await handlePostTopic({ postId, topicNames: JSON.parse(topics) });
+      const parsedTopics = JSON.parse(topics);
+      await handlePostTopic({ postId, topicNames: parsedTopics });
       return { postId };
     }
     if (JSON.parse(isScheduled)) {
@@ -617,9 +618,10 @@ class PostsService {
 
     const res = await this.create({ ...body });
 
+    const parsedTopics = JSON.parse(topics);
     await handlePostTopic({
       postId: res.postId,
-      topicNames: JSON.parse(topics),
+      topicNames: parsedTopics,
     });
     return res;
   }

@@ -29,13 +29,19 @@ async function handlePostTopic({ postId, topicNames }) {
   // Tổng hợp tất cả topicId
   const allTopicIds = [...existingIds, ...newIds];
 
+  // Xóa các topic cũ của post trước khi thêm mới
+  await Post_Topic.destroy({
+    where: { postId },
+  });
+
   // Tạo các bản ghi trong bảng PostTopic
-  allTopicIds.forEach(
-    async (topicId) =>
-      await Post_Topic.create({
+  await Promise.all(
+    allTopicIds.map((topicId) =>
+      Post_Topic.create({
         postId,
         topicId,
       })
+    )
   );
 }
 
