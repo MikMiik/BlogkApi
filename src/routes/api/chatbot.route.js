@@ -19,6 +19,19 @@ router.get("/sessions/:sessionId/stats", chatController.getSessionStats);
 router.delete("/sessions/:sessionId", chatController.clearSession);
 router.delete("/sessions/user/all", chatController.clearUserSessions);
 
+// Conversation management
+router.get("/conversations", chatController.getUserConversations);
+router.post("/conversations/new", chatController.createNewConversation);
+router.get("/conversations/active", chatController.getActiveConversation);
+router.put(
+  "/conversations/:sessionId/title",
+  chatController.updateConversationTitle
+);
+router.delete(
+  "/conversations/:sessionId",
+  chatController.deactivateConversation
+);
+
 // History management
 router.get("/history/:sessionId", chatController.getConversationHistory);
 

@@ -2,6 +2,7 @@ const chatbotService = require("@/chatbot/services/chatbotService");
 const sessionManager = require("@/chatbot/services/sessionManager");
 const historyService = require("@/chatbot/services/historyService");
 const trainingService = require("@/chatbot/services/trainingService");
+const conversationService = require("@/chatbot/services/conversationService");
 const getCurrentUser = require("@/utils/getCurrentUser");
 const pusher = require("@/configs/pusher");
 
@@ -17,6 +18,12 @@ exports.send = async (req, res) => {
     // Get current user if authenticated
     const userId = getCurrentUser();
 
+    // Get or create conversation
+    const conversation = await conversationService.getOrCreateConversation(
+      userId,
+      sessionId
+    );
+
     // Merge options with user info
     const chatOptions = {
       userId,
@@ -27,9 +34,24 @@ exports.send = async (req, res) => {
 
     const result = await chatbotService.send(
       message,
-      sessionId, // Pass sessionId from header or null for new session
+      conversation.sessionId, // Use conversation sessionId
       chatOptions
     );
+
+    // Update conversation activity and message count
+    await conversationService.updateConversationActivity(
+      conversation.sessionId
+    );
+    await conversationService.incrementMessageCount(conversation.sessionId);
+
+    // Auto-generate title for new conversations
+    if (conversation.isNew) {
+      const title = conversationService.generateConversationTitle(message);
+      await conversationService.updateConversationTitle(
+        conversation.sessionId,
+        title
+      );
+    }
 
     // Trigger websocket event for real-time chat updates
     try {
@@ -293,7 +315,12 @@ exports.clearUserSessions = async (req, res) => {
       return res.error(401, "Authentication required");
     }
 
+    // Clear sessions from Redis
     const result = await sessionManager.clearUserSessions(userId);
+
+    // Deactivate conversations
+    await conversationService.deactivateUserConversations(userId);
+
     if (result) {
       res.success(200, { message: "All user sessions cleared successfully" });
     } else {
@@ -302,5 +329,98 @@ exports.clearUserSessions = async (req, res) => {
   } catch (error) {
     console.error("Error clearing user sessions:", error);
     return res.error(500, "Failed to clear user sessions");
+  }
+};
+
+// New conversation management endpoints
+exports.getUserConversations = async (req, res) => {
+  try {
+    const userId = getCurrentUser();
+    if (!userId) {
+      return res.error(401, "Authentication required");
+    }
+
+    const { limit = 20, offset = 0, includeInactive = false } = req.query;
+
+    const conversations = await conversationService.getUserConversations(
+      userId,
+      {
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        includeInactive: includeInactive === "true",
+      }
+    );
+
+    res.success(200, {
+      conversations,
+      total: conversations.length,
+    });
+  } catch (error) {
+    console.error("Error getting user conversations:", error);
+    return res.error(500, "Failed to get user conversations");
+  }
+};
+
+exports.createNewConversation = async (req, res) => {
+  try {
+    const userId = getCurrentUser();
+
+    const conversation =
+      await conversationService.createNewConversation(userId);
+
+    res.success(201, conversation);
+  } catch (error) {
+    console.error("Error creating new conversation:", error);
+    return res.error(500, "Failed to create new conversation");
+  }
+};
+
+exports.getActiveConversation = async (req, res) => {
+  try {
+    const userId = getCurrentUser();
+    const sessionId = req.headers["x-chatbot-session-id"] || null;
+
+    const conversation = await conversationService.getOrCreateConversation(
+      userId,
+      sessionId
+    );
+
+    res.success(200, conversation);
+  } catch (error) {
+    console.error("Error getting active conversation:", error);
+    return res.error(500, "Failed to get active conversation");
+  }
+};
+
+exports.updateConversationTitle = async (req, res) => {
+  const { sessionId } = req.params;
+  const { title } = req.body;
+
+  if (!sessionId || !title) {
+    return res.error(400, "Session ID and title are required");
+  }
+
+  try {
+    await conversationService.updateConversationTitle(sessionId, title);
+    res.success(200, { message: "Title updated successfully" });
+  } catch (error) {
+    console.error("Error updating conversation title:", error);
+    return res.error(500, "Failed to update conversation title");
+  }
+};
+
+exports.deactivateConversation = async (req, res) => {
+  const { sessionId } = req.params;
+
+  if (!sessionId) {
+    return res.error(400, "Session ID is required");
+  }
+
+  try {
+    await conversationService.deactivateConversation(sessionId);
+    res.success(200, { message: "Conversation deactivated successfully" });
+  } catch (error) {
+    console.error("Error deactivating conversation:", error);
+    return res.error(500, "Failed to deactivate conversation");
   }
 };
