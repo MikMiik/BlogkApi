@@ -12,9 +12,15 @@ module.exports = (sequelize, DataTypes) => {
 
       // Association with ChatHistory
       ChatbotConversation.hasMany(models.ChatHistory, {
+        foreignKey: "conversationId",
+        as: "messages",
+      });
+
+      // Alternative association through sessionId for backward compatibility
+      ChatbotConversation.hasMany(models.ChatHistory, {
         foreignKey: "sessionId",
         sourceKey: "sessionId",
-        as: "messages",
+        as: "messagesBySession",
       });
     }
 

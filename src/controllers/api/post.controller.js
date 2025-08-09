@@ -23,22 +23,21 @@ exports.getOne = async (req, res) => {
   const { id } = req.params;
   const data = await postService.getById(id);
 
-  // Get current view count from Redis if available
+  // Database is the source of truth for view count
+  // Only use Redis for fast increment, but always show database count
   if (data.post) {
     try {
-      const viewCountKey = `post:${id}:views`;
-      const redisViewCount = await redisClient.get(viewCountKey);
-
-      if (redisViewCount) {
-        // Use Redis count if available (more up-to-date)
-        data.post.viewsCount = parseInt(redisViewCount);
-      }
+      // Always use database view count as the authoritative source
+      // Redis is only used for fast increments and periodic sync
 
       // Add view tracking info to response
       data.isNewView = req.isNewView || false;
+
+      console.log(
+        `📊 Showing view count from database: ${data.post.viewsCount} for post ${id}`
+      );
     } catch (error) {
-      console.error("❌ Error getting view count from Redis:", error.message);
-      // Fallback to database count
+      console.error("❌ Error in view count logic:", error.message);
     }
   }
 

@@ -4,16 +4,14 @@
  */
 
 const FORMATTING_RULES = `
-📝 QUY TẮC FORMAT TIN NHẮN (BẮT BUỘC):
-- TUYỆT ĐỐI KHÔNG dùng ### hoặc ** để tạo tiêu đề hay làm nổi bật
-- TUYỆT ĐỐI KHÔNG dùng markdown syntax như #, ##, ###, *, **, ***
-- Khi liệt kê ý, dùng dấu gạch đầu dòng (-) và xuống dòng mỗi ý
-- Mỗi ý quan trọng nên trên một dòng riêng biệt
-- Dùng emoji phù hợp để làm nổi bật thay thế cho markdown
+## 🎯 Hướng dẫn format:
+- Ưu tiên dùng dấu gạch đầu dòng (-) cho lists
+- Hạn chế dùng ### và ** - chỉ khi thực sự cần thiết
+- Sử dụng emoji để làm nổi bật
 - Giữ câu văn ngắn gọn, dễ đọc
 - Sử dụng khoảng trống để tách các phần khác nhau
 
-VÍ DỤ FORMAT ĐÚNG:
+**Ví dụ format tốt:**
 "Chào bạn! 😊 Dưới đây là hướng dẫn viết blog hiệu quả:
 
 Bước 1: Chọn chủ đề
@@ -30,10 +28,7 @@ Bước 3: Lập dàn ý
 
 Bạn muốn tìm hiểu thêm về bước nào cụ thể?"
 
-VÍ DỤ FORMAT SAI (TUYỆT ĐỐI TRÁNH):
-"### Bước 1: Chọn Chủ Đề
-- **Xác định đối tượng**: Ai sẽ đọc?
-- **Chọn chủ đề hấp dẫn**: Nên chọn..."`;
+Note: Frontend đã hỗ trợ markdown rendering nên có thể dùng ### và ** khi cần thiết.`;
 
 /**
  * Add formatting rules to any agent prompt

@@ -1,7 +1,21 @@
-const { ChatHistory } = require("@/models");
+const { ChatHistory, ChatbotConversation } = require("@/models");
 const { Op } = require("sequelize");
 
 class ChatHistoryService {
+  // Helper method to get conversationId from sessionId
+  async getConversationIdBySessionId(sessionId) {
+    try {
+      const conversation = await ChatbotConversation.findOne({
+        where: { sessionId },
+        attributes: ["id"],
+      });
+      return conversation ? conversation.id : null;
+    } catch (error) {
+      console.error("Error getting conversationId:", error);
+      return null;
+    }
+  }
+
   // Lưu tin nhắn mới
   async saveMessage(
     sessionId,
@@ -9,11 +23,18 @@ class ChatHistoryService {
     messageContent,
     messageType,
     agentName,
-    metadata = {}
+    metadata = {},
+    conversationId = null
   ) {
     try {
+      // Auto-find conversationId if not provided
+      if (!conversationId) {
+        conversationId = await this.getConversationIdBySessionId(sessionId);
+      }
+
       return await ChatHistory.create({
         sessionId,
+        conversationId,
         userId: userId || null,
         messageContent,
         messageType,

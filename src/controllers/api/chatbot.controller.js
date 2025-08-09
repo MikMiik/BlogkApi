@@ -209,8 +209,22 @@ exports.getConversationHistory = async (req, res) => {
   }
 
   try {
-    const history = await historyService.getRecentHistory(sessionId, 20);
+    const historyRecords = await historyService.getRecentHistory(sessionId, 50);
     const sessionStats = await sessionManager.getSessionStats(sessionId);
+
+    // Transform history records to frontend format
+    const history = historyRecords.map((record) => ({
+      id: record.id,
+      role: record.messageContent?.role || record.messageType,
+      content: record.messageContent?.content || record.messageContent,
+      createdAt: record.createdAt,
+      metadata: {
+        agentName: record.agentName,
+        confidence: record.confidence,
+        classificationMethod: record.classificationMethod,
+        ...record.metadata,
+      },
+    }));
 
     res.success(200, {
       sessionId,

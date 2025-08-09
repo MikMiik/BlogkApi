@@ -4,8 +4,24 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class ChatHistory extends Model {
     static associate(models) {
-      // Define associations here if needed
-      // ChatHistory.belongsTo(models.User, { foreignKey: "userId" });
+      // Association with User
+      ChatHistory.belongsTo(models.User, {
+        foreignKey: "userId",
+        as: "user",
+      });
+
+      // Association with ChatbotConversation
+      ChatHistory.belongsTo(models.ChatbotConversation, {
+        foreignKey: "conversationId",
+        as: "conversation",
+      });
+
+      // Alternative association through sessionId for backward compatibility
+      ChatHistory.belongsTo(models.ChatbotConversation, {
+        foreignKey: "sessionId",
+        targetKey: "sessionId",
+        as: "conversationBySession",
+      });
     }
 
     // Instance methods
@@ -28,6 +44,15 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(100),
         allowNull: false,
         comment: "Unique session identifier for grouping chat messages",
+      },
+      conversationId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        comment: "Reference to chatbot_conversations table",
+        references: {
+          model: "chatbot_conversations",
+          key: "id",
+        },
       },
       userId: {
         type: DataTypes.INTEGER,

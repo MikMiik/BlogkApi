@@ -3,10 +3,12 @@ require("dotenv").config();
 const queueService = require("@/services/queue.service");
 const sendVerifyEmailJob = require("@/jobs/sendVerifyEmailJob");
 const sendForgotPasswordEmailJob = require("@/jobs/sendForgotPasswordEmailJob");
+const viewCountSyncJob = require("@/jobs/viewCountSyncJob");
 
 const handlers = {
   sendVerifyEmailJob,
   sendForgotPasswordEmailJob,
+  viewCountSyncJob,
 };
 
 async function queueWorker() {
