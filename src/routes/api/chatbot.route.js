@@ -8,19 +8,18 @@ router.post("/", chatController.send);
 // Training and feedback
 router.post("/train", chatController.trainFromFeedback);
 router.post("/training/example", chatController.addTrainingExample);
-router.post("/training/retrain", chatController.retrainAllIntents);
 
-// Analytics and stats
+// Basic stats (only working endpoints)
 router.get("/stats", chatController.getStats);
-router.get("/stats/classification", chatController.getClassificationStats);
-router.get("/stats/performance", chatController.getMethodPerformance);
-router.get("/stats/training", chatController.getTrainingStats);
 
-// Data management
-router.get("/export", chatController.exportTrainingData);
-router.post("/history/clear", chatController.clearConversationHistory);
-router.get("/history/:sessionId", chatController.getConversationHistory);
-router.get("/sessions/user/:userId", chatController.getUserSessions);
+// Session management
+router.post("/sessions", chatController.createSession);
+router.get("/sessions/user", chatController.getUserSessions);
 router.get("/sessions/:sessionId/stats", chatController.getSessionStats);
+router.delete("/sessions/:sessionId", chatController.clearSession);
+router.delete("/sessions/user/all", chatController.clearUserSessions);
+
+// History management
+router.get("/history/:sessionId", chatController.getConversationHistory);
 
 module.exports = router;

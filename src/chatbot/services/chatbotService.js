@@ -3,21 +3,31 @@ const smartClassifier = require("../core/smartClassifier");
 const agentRouter = require("../core/agentRouter");
 const intentTrainer = require("../core/intentTrainer");
 const historyService = require("./historyService");
+const sessionManager = require("./sessionManager");
 
 class ChatbotService {
   constructor() {
     this.maxHistoryLength = 5; // Keep last 5 messages for context
   }
 
-  async send(message, sessionId = "default", options = {}) {
+  async send(message, sessionId = null, options = {}) {
     if (!message) {
       throw new Error("Message is required");
     }
 
     try {
+      // Get or create session using Redis
+      const chatSessionId = await sessionManager.getOrCreateSession(
+        options.userId,
+        sessionId
+      );
+
+      // Update session activity
+      await sessionManager.updateSessionActivity(chatSessionId, true);
+
       // Get conversation history for context
       const historyRecords = await historyService.getRecentHistory(
-        sessionId,
+        chatSessionId,
         this.maxHistoryLength
       );
       const history = historyRecords.map((record) => record.messageContent);
@@ -45,7 +55,7 @@ class ChatbotService {
           message,
           history,
           {
-            sessionId,
+            sessionId: chatSessionId,
             userId: options.userId,
           }
         );
@@ -72,7 +82,7 @@ class ChatbotService {
 
       // Save user message
       await historyService.saveMessage(
-        sessionId,
+        chatSessionId,
         options.userId,
         userMessage,
         "user",
@@ -97,7 +107,7 @@ class ChatbotService {
       // Save assistant response
       const assistantMessage = { role: "assistant", content: response };
       await historyService.saveMessage(
-        sessionId,
+        chatSessionId,
         options.userId,
         assistantMessage,
         "assistant",
@@ -128,13 +138,14 @@ class ChatbotService {
 
       return {
         response,
+        sessionId: chatSessionId, // Return the managed sessionId
         metadata: {
           agentName: classificationResult.agentName,
           confidence: classificationResult.confidence,
           method: classificationResult.method,
           reasoning: classificationResult.reasoning,
           estimatedCost: classificationResult.cost,
-          sessionId,
+          sessionId: chatSessionId,
           timestamp: new Date().toISOString(),
         },
       };

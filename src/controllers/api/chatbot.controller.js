@@ -1,8 +1,13 @@
-const chatbotManager = require("@/chatbot/services/index");
+const chatbotService = require("@/chatbot/services/chatbotService");
+const sessionManager = require("@/chatbot/services/sessionManager");
+const historyService = require("@/chatbot/services/historyService");
+const trainingService = require("@/chatbot/services/trainingService");
 const getCurrentUser = require("@/utils/getCurrentUser");
+const pusher = require("@/configs/pusher");
 
 exports.send = async (req, res) => {
-  const { message, sessionId, options = {} } = req.body;
+  const { message, options = {} } = req.body;
+  const sessionId = req.headers["x-chatbot-session-id"] || null;
 
   if (!message) {
     return res.error(400, "Message is required");
@@ -12,10 +17,6 @@ exports.send = async (req, res) => {
     // Get current user if authenticated
     const userId = getCurrentUser();
 
-    // Generate sessionId if not provided
-    const chatSessionId =
-      sessionId || `session_${userId || "anonymous"}_${Date.now()}`;
-
     // Merge options with user info
     const chatOptions = {
       userId,
@@ -24,15 +25,33 @@ exports.send = async (req, res) => {
       ...options,
     };
 
-    const result = await chatbotManager.send(
+    const result = await chatbotService.send(
       message,
-      chatSessionId,
+      sessionId, // Pass sessionId from header or null for new session
       chatOptions
     );
 
+    // Trigger websocket event for real-time chat updates
+    try {
+      await pusher.trigger(
+        `chatbot-session-${result.sessionId}`,
+        "new-message",
+        {
+          sessionId: result.sessionId,
+          userMessage: { role: "user", content: message },
+          botResponse: { role: "assistant", content: result.response },
+          metadata: result.metadata,
+          timestamp: new Date().toISOString(),
+        }
+      );
+    } catch (pusherError) {
+      console.error("Pusher trigger error:", pusherError);
+      // Don't fail the request if pusher fails
+    }
+
     res.success(200, {
       response: result.response,
-      sessionId: chatSessionId,
+      sessionId: result.sessionId, // Return managed sessionId
       metadata: result.metadata,
     });
   } catch (error) {
@@ -42,17 +61,18 @@ exports.send = async (req, res) => {
 };
 
 exports.trainFromFeedback = async (req, res) => {
-  const { message, correctAgent, confidence = 1.0, sessionId } = req.body;
+  const { message, correctAgent, confidence = 1.0 } = req.body;
+  const sessionId = req.headers["x-chatbot-session-id"] || "manual_training";
 
   if (!message || !correctAgent) {
     return res.error(400, "Message and correctAgent are required");
   }
 
   try {
-    const result = await chatbotManager.trainFromFeedback(
+    const result = await trainingService.trainFromFeedback(
       message,
       correctAgent,
-      sessionId || "manual_training",
+      sessionId,
       confidence
     );
 
@@ -65,7 +85,7 @@ exports.trainFromFeedback = async (req, res) => {
 
 exports.getStats = async (req, res) => {
   try {
-    const stats = await chatbotManager.getStats();
+    const stats = await chatbotService.getStats();
     res.success(200, stats);
   } catch (error) {
     console.error("Error getting stats:", error);
@@ -145,7 +165,7 @@ exports.addTrainingExample = async (req, res) => {
   }
 
   try {
-    const result = await chatbotManager.addTrainingExample(
+    const result = await trainingService.addTrainingExample(
       message,
       agentName,
       confidence,
@@ -167,38 +187,18 @@ exports.getConversationHistory = async (req, res) => {
   }
 
   try {
-    const history = await chatbotManager.getConversationHistory(sessionId, 20);
-    const stats = await chatbotManager.getSessionStats(sessionId);
+    const history = await historyService.getRecentHistory(sessionId, 20);
+    const sessionStats = await sessionManager.getSessionStats(sessionId);
 
     res.success(200, {
       sessionId,
       history,
-      stats,
+      stats: sessionStats,
       totalMessages: history.length,
     });
   } catch (error) {
     console.error("Error getting conversation history:", error);
     return res.error(500, "Failed to get conversation history");
-  }
-};
-
-exports.getUserSessions = async (req, res) => {
-  const { userId } = req.params;
-  const { limit = 20 } = req.query;
-
-  if (!userId) {
-    return res.error(400, "User ID is required");
-  }
-
-  try {
-    const sessions = await chatbotManager.getUserSessions(
-      userId,
-      parseInt(limit)
-    );
-    res.success(200, { userId, sessions, totalSessions: sessions.length });
-  } catch (error) {
-    console.error("Error getting user sessions:", error);
-    return res.error(500, "Failed to get user sessions");
   }
 };
 
@@ -210,10 +210,97 @@ exports.getSessionStats = async (req, res) => {
   }
 
   try {
-    const stats = await chatbotManager.getSessionStats(sessionId);
+    const stats = await sessionManager.getSessionStats(sessionId);
+    if (!stats) {
+      return res.error(404, "Session not found");
+    }
     res.success(200, { sessionId, stats });
   } catch (error) {
     console.error("Error getting session stats:", error);
     return res.error(500, "Failed to get session stats");
+  }
+};
+
+// New session management endpoints
+exports.createSession = async (req, res) => {
+  try {
+    const userId = getCurrentUser();
+    const sessionId = await sessionManager.getOrCreateSession(userId);
+
+    res.success(201, {
+      sessionId,
+      message: "Session created successfully",
+    });
+  } catch (error) {
+    console.error("Error creating session:", error);
+    return res.error(500, "Failed to create session");
+  }
+};
+
+exports.getUserSessions = async (req, res) => {
+  try {
+    const userId = getCurrentUser();
+    if (!userId) {
+      return res.error(401, "Authentication required");
+    }
+
+    const { limit = 10 } = req.query;
+    const sessions = await sessionManager.getUserSessions(
+      userId,
+      parseInt(limit)
+    );
+
+    res.success(200, {
+      userId,
+      sessions,
+      totalSessions: sessions.length,
+    });
+  } catch (error) {
+    console.error("Error getting user sessions:", error);
+    return res.error(500, "Failed to get user sessions");
+  }
+};
+
+exports.clearSession = async (req, res) => {
+  const { sessionId } = req.params;
+
+  if (!sessionId) {
+    return res.error(400, "Session ID is required");
+  }
+
+  try {
+    // Clear session from Redis
+    const result = await sessionManager.clearSession(sessionId);
+
+    // Also clear chat history from database
+    await historyService.clearSession(sessionId);
+
+    if (result) {
+      res.success(200, { message: "Session cleared successfully" });
+    } else {
+      res.error(404, "Session not found or already cleared");
+    }
+  } catch (error) {
+    console.error("Error clearing session:", error);
+    return res.error(500, "Failed to clear session");
+  }
+};
+
+exports.clearUserSessions = async (req, res) => {
+  try {
+    const userId = getCurrentUser();
+    if (!userId) {
+      return res.error(401, "Authentication required");
+    }
+
+    const result = await sessionManager.clearUserSessions(userId);
+    if (result) {
+      res.success(200, { message: "All user sessions cleared successfully" });
+    } else {
+      res.error(500, "Failed to clear user sessions");
+    }
+  } catch (error) {
+    console.error("Error clearing user sessions:", error);
+    return res.error(500, "Failed to clear user sessions");
   }
 };
