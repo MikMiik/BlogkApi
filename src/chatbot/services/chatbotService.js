@@ -66,21 +66,58 @@ class ChatbotService {
         classificationResult.agentName
       );
 
-      // Prepare conversation context
-      const contextMessages = [
-        { role: "system", content: agentConfig.systemPrompt },
-      ];
+      let response;
+      let usedOpenAI = true;
 
-      // Add conversation history if available
-      if (history.length > 0 && options.includeContext !== false) {
-        contextMessages.push(...history);
+      // Special handling for BlogDataAgent - try to get direct data first
+      if (classificationResult.agentName === "blogDataAgent") {
+        try {
+          const agent = agentRouter.getAgent("blogDataAgent");
+          const dataResult = await agent.handle(message, {
+            sessionId: chatSessionId,
+            userId: options.userId,
+          });
+
+          if (dataResult && dataResult.success) {
+            response = dataResult.message;
+            usedOpenAI = false;
+            console.log("✅ BlogDataAgent handled query directly");
+          }
+        } catch (error) {
+          console.error("BlogDataAgent error, falling back to OpenAI:", error);
+          // Will fall through to OpenAI handling
+        }
       }
 
-      // Add current user message
-      const userMessage = { role: "user", content: message };
-      contextMessages.push(userMessage);
+      // If not handled by data agent or failed, use OpenAI
+      if (!response) {
+        // Prepare conversation context
+        const contextMessages = [
+          { role: "system", content: agentConfig.systemPrompt },
+        ];
+
+        // Add conversation history if available
+        if (history.length > 0 && options.includeContext !== false) {
+          contextMessages.push(...history);
+        }
+
+        // Add current user message
+        const userMessage = { role: "user", content: message };
+        contextMessages.push(userMessage);
+
+        // Send to OpenAI
+        const openaiResponse = await openai.send({
+          input: contextMessages,
+          temperature: agentConfig.settings.temperature,
+          max_output_tokens: agentConfig.settings.max_output_tokens,
+          model: agentConfig.settings.model,
+        });
+
+        response = openaiResponse;
+      }
 
       // Save user message
+      const userMessage = { role: "user", content: message };
       await historyService.saveMessage(
         chatSessionId,
         options.userId,
@@ -96,14 +133,6 @@ class ChatbotService {
         }
       );
 
-      // Send to OpenAI
-      const response = await openai.send({
-        input: contextMessages,
-        temperature: agentConfig.settings.temperature,
-        max_output_tokens: agentConfig.settings.max_output_tokens,
-        model: agentConfig.settings.model,
-      });
-
       // Save assistant response
       const assistantMessage = { role: "assistant", content: response };
       await historyService.saveMessage(
@@ -118,7 +147,8 @@ class ChatbotService {
           estimatedCost: 0,
           originalQuery: message,
           processingTime: new Date().toISOString(),
-          model: agentConfig.settings.model,
+          model: usedOpenAI ? agentConfig.settings.model : "direct_data_query",
+          usedOpenAI,
         }
       );
 

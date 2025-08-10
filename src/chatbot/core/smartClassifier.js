@@ -21,6 +21,23 @@ class SmartClassifier {
     };
 
     try {
+      // Priority Step: Check for blog data queries first
+      const blogDataResult = await this.checkBlogDataQuery(message);
+      if (
+        blogDataResult &&
+        blogDataResult.confidence >= this.confidenceThreshold
+      ) {
+        console.log(
+          `🔍 Blog data query detected: ${blogDataResult.agentName} (${blogDataResult.confidence.toFixed(2)})`
+        );
+
+        classificationResult.agentName = blogDataResult.agentName;
+        classificationResult.confidence = blogDataResult.confidence;
+        classificationResult.method = "blog_data_detection";
+        classificationResult.reasoning = blogDataResult.reasoning;
+        return classificationResult;
+      }
+
       // Step 1: Try pattern-based classification first (fast & cheap)
       const patternResult = await intentTrainer.classifyIntent(message);
 
@@ -320,6 +337,125 @@ Current message to classify:`;
 
   async exportClassificationData() {
     return await intentTrainer.exportTrainingData();
+  }
+
+  // Check if the message is asking for blog data/content
+  async checkBlogDataQuery(message) {
+    const lowerMessage = message.toLowerCase();
+
+    // Keywords that indicate blog data queries
+    const blogDataKeywords = [
+      // Vietnamese
+      "tác giả",
+      "người viết",
+      "ai viết",
+      "author",
+      "bài viết",
+      "post",
+      "article",
+      "blog",
+      "tiêu đề",
+      "title",
+      "tên bài",
+      "danh mục",
+      "category",
+      "chủ đề",
+      "thẻ",
+      "tag",
+      "từ khóa",
+      "mới nhất",
+      "recent",
+      "latest",
+      "tìm kiếm",
+      "search",
+      "tìm",
+      "thống kê",
+      "stats",
+      "số lượng",
+      "chi tiết",
+      "thông tin",
+      "detail",
+      // English
+      "who wrote",
+      "written by",
+      "authored by",
+      "find post",
+      "search article",
+      "look for",
+      "recent posts",
+      "latest articles",
+      "blog statistics",
+      "post count",
+    ];
+
+    // Title patterns (quoted or specific phrases)
+    const titlePatterns = [
+      /"([^"]+)"/, // Quoted titles
+      /conspergo admiratio decor/i, // Specific title mentioned
+      /tiêu đề.*?([a-zA-Z0-9\s]+)/i, // Title followed by text
+      /title.*?([a-zA-Z0-9\s]+)/i,
+    ];
+
+    // Author query patterns
+    const authorPatterns = [
+      /(tác giả|author|ai viết|người viết).*?(của|bài|post|title)/i,
+      /(who wrote|written by|authored by)/i,
+      /bài.*?(của|by|tác giả)/i,
+    ];
+
+    // Calculate confidence based on keyword matches
+    let confidence = 0;
+    let matchedKeywords = [];
+    let reasoning = "";
+
+    // Check for author queries (high priority)
+    for (const pattern of authorPatterns) {
+      if (pattern.test(lowerMessage)) {
+        confidence = Math.max(confidence, 0.95);
+        reasoning = "Author query pattern detected";
+        matchedKeywords.push("author_query");
+        break;
+      }
+    }
+
+    // Check for title patterns (high priority)
+    for (const pattern of titlePatterns) {
+      if (pattern.test(lowerMessage)) {
+        confidence = Math.max(confidence, 0.9);
+        reasoning = reasoning || "Title pattern detected";
+        matchedKeywords.push("title_pattern");
+        break;
+      }
+    }
+
+    // Check for general blog data keywords
+    for (const keyword of blogDataKeywords) {
+      if (lowerMessage.includes(keyword)) {
+        confidence += 0.1;
+        matchedKeywords.push(keyword);
+      }
+    }
+
+    // Bonus for multiple keyword matches
+    if (matchedKeywords.length >= 2) {
+      confidence += 0.2;
+    }
+
+    // Cap confidence at 1.0
+    confidence = Math.min(confidence, 1.0);
+
+    // Only return if confidence is above threshold
+    if (confidence >= 0.75) {
+      return {
+        agentName: "blogDataAgent",
+        confidence,
+        reasoning:
+          reasoning ||
+          `Matched ${matchedKeywords.length} blog data keywords: ${matchedKeywords.slice(0, 3).join(", ")}`,
+      };
+    }
+
+    return null;
   }
 }
 

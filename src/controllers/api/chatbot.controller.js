@@ -4,7 +4,9 @@ const historyService = require("@/chatbot/services/historyService");
 const trainingService = require("@/chatbot/services/trainingService");
 const conversationService = require("@/chatbot/services/conversationService");
 const getCurrentUser = require("@/utils/getCurrentUser");
-const pusher = require("@/configs/pusher");
+
+// Import training script
+const { trainBlogDataAgent } = require("@/chatbot/training/blogDataTraining");
 
 exports.send = async (req, res) => {
   const { message, options = {} } = req.body;
@@ -51,24 +53,6 @@ exports.send = async (req, res) => {
         conversation.sessionId,
         title
       );
-    }
-
-    // Trigger websocket event for real-time chat updates
-    try {
-      await pusher.trigger(
-        `chatbot-session-${result.sessionId}`,
-        "new-message",
-        {
-          sessionId: result.sessionId,
-          userMessage: { role: "user", content: message },
-          botResponse: { role: "assistant", content: result.response },
-          metadata: result.metadata,
-          timestamp: new Date().toISOString(),
-        }
-      );
-    } catch (pusherError) {
-      console.error("Pusher trigger error:", pusherError);
-      // Don't fail the request if pusher fails
     }
 
     res.success(200, {
@@ -436,5 +420,21 @@ exports.deactivateConversation = async (req, res) => {
   } catch (error) {
     console.error("Error deactivating conversation:", error);
     return res.error(500, "Failed to deactivate conversation");
+  }
+};
+
+// Train BlogDataAgent
+exports.trainBlogDataAgent = async (req, res) => {
+  try {
+    console.log("🚀 Starting BlogDataAgent training...");
+    await trainBlogDataAgent();
+
+    res.success(200, {
+      message: "BlogDataAgent trained successfully",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Error training BlogDataAgent:", error);
+    return res.error(500, "Failed to train BlogDataAgent");
   }
 };

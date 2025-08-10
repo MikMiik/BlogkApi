@@ -8,6 +8,7 @@ router.post("/", chatController.send);
 // Training and feedback
 router.post("/train", chatController.trainFromFeedback);
 router.post("/training/example", chatController.addTrainingExample);
+router.post("/training/blog-data", chatController.trainBlogDataAgent);
 
 // Basic stats (only working endpoints)
 router.get("/stats", chatController.getStats);

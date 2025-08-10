@@ -202,6 +202,12 @@ class ChatbotTrainingService {
       "trong",
       "với",
       "của",
+      "này",
+      "đó",
+      "không",
+      "thì",
+      "sẽ",
+      "đã",
       "i",
       "you",
       "is",
@@ -212,6 +218,13 @@ class ChatbotTrainingService {
       "in",
       "with",
       "for",
+      "this",
+      "that",
+      "not",
+      "can",
+      "will",
+      "have",
+      "has",
     ]);
 
     return text
