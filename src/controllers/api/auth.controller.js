@@ -50,18 +50,20 @@ exports.githubCallback = async (req, res) => {
 
     // Set cookies with tokens - both accessible to client for localStorage transfer
     res.cookie("accessToken", data.accessToken, {
+      domain: ".blogk.online",
       httpOnly: false, // Client needs access
       secure: true,
-      sameSite: "lax",
+      sameSite: "none",
       maxAge: 60 * 60 * 1000, // 1 hour
       path: "/",
     });
 
     if (data.refreshToken) {
       res.cookie("refreshToken", data.refreshToken, {
+        domain: ".blogk.online",
         httpOnly: false, // Allow client access for localStorage transfer
         secure: true,
-        sameSite: "lax",
+        sameSite: "none",
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         path: "/",
       });
